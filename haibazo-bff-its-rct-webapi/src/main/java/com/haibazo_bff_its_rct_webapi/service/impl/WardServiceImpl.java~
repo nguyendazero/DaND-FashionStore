@@ -1,0 +1,127 @@
+package com.haibazo_bff_its_rct_webapi.service.impl;
+
+import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
+import com.haibazo_bff_its_rct_webapi.dto.request.AddWardRequest;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctWardResponse;
+import com.haibazo_bff_its_rct_webapi.enums.ApiError;
+import com.haibazo_bff_its_rct_webapi.exception.ResourceAlreadyExistsException;
+import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
+import com.haibazo_bff_its_rct_webapi.model.City;
+import com.haibazo_bff_its_rct_webapi.model.District;
+import com.haibazo_bff_its_rct_webapi.model.Ward;
+import com.haibazo_bff_its_rct_webapi.repository.CityRepository;
+import com.haibazo_bff_its_rct_webapi.repository.DistrictRepository;
+import com.haibazo_bff_its_rct_webapi.repository.WardRepository;
+import com.haibazo_bff_its_rct_webapi.service.WardService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class WardServiceImpl implements WardService {
+
+    private final DistrictRepository districtRepository;
+    private final WardRepository wardRepository;
+
+    @Override
+    public APICustomize<ItsRctWardResponse> create(AddWardRequest request) {
+
+        if (wardRepository.existsByName(request.getName())) {
+            throw new ResourceAlreadyExistsException("Ward", "name", request.getName());
+        }
+
+        District district = districtRepository.findById(request.getDistrictId())
+                .orElseThrow(() -> new ResourceNotFoundException("District", "id", request.getDistrictId().toString()));
+
+        Ward ward = new Ward();
+        ward.setName(request.getName());
+        ward.setDistrict(district);
+        Ward savedWard = wardRepository.save(ward);
+
+        ItsRctWardResponse response = new ItsRctWardResponse(
+                savedWard.getId(),
+                savedWard.getName(),
+                savedWard.getDistrict().getId(),
+                savedWard.getCreatedAt(),
+                savedWard.getUpdatedAt()
+        );
+
+        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), response);
+    }
+
+    @Override
+    public APICustomize<ItsRctWardResponse> update(Long id, AddWardRequest request) {
+
+        Ward ward = wardRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ward", "id", id.toString()));
+
+        if (wardRepository.existsByName(request.getName())) {
+            throw new ResourceAlreadyExistsException("Ward", "name", request.getName());
+        }
+
+        ward.setName(request.getName());
+        ward.setUpdatedAt(LocalDateTime.now());
+        Ward savedWard = wardRepository.save(ward);
+
+        ItsRctWardResponse response = new ItsRctWardResponse(
+                savedWard.getId(),
+                savedWard.getName(),
+                savedWard.getDistrict().getId(),
+                savedWard.getCreatedAt(),
+                savedWard.getUpdatedAt()
+        );
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
+    }
+
+    @Override
+    public APICustomize<String> delete(Long id) {
+
+        Ward ward = wardRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ward", "id", id.toString()));
+
+        wardRepository.delete(ward);
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Successfully deleted ward with id = " + ward.getId());
+    }
+
+    @Override
+    public APICustomize<ItsRctWardResponse> ward(Long id) {
+
+        Ward ward = wardRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ward", "id", id.toString()));
+
+        ItsRctWardResponse response = new ItsRctWardResponse(
+                ward.getId(),
+                ward.getName(),
+                ward.getDistrict().getId(),
+                ward.getCreatedAt(),
+                ward.getUpdatedAt()
+        );
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
+    }
+
+    @Override
+    public APICustomize<List<ItsRctWardResponse>> wards(Long districtId) {
+
+        District district = districtRepository.findById(districtId)
+                .orElseThrow(() -> new ResourceNotFoundException("District", "id", districtId.toString()));
+
+        List<Ward> wards = wardRepository.findByDistrict(district);
+
+        List<ItsRctWardResponse> response = wards.stream()
+                .map(ward -> new ItsRctWardResponse(
+                        ward.getId(),
+                        ward.getName(),
+                        ward.getDistrict().getId(),
+                        ward.getCreatedAt(),
+                        ward.getUpdatedAt()
+                ))
+                .toList();
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
+    }
+}

@@ -1,0 +1,13 @@
+package com.haibazo_bff_its_rct_webapi.dto.response;
+
+import java.time.LocalDateTime;
+
+public class ItsRctPostResponse {
+    private Long id;
+    private String name;
+    private String content;
+    private ItsRctCategoryResponse category;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+}

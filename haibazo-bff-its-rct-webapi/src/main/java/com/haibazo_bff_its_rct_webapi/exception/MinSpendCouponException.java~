@@ -1,0 +1,19 @@
+package com.haibazo_bff_its_rct_webapi.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.math.BigDecimal;
+
+@Getter
+@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+public class MinSpendCouponException extends RuntimeException {
+    private final BigDecimal minSpend;
+
+    public MinSpendCouponException(BigDecimal minSpend) {
+        super();
+        this.minSpend = minSpend;
+    }
+}
+

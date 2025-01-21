@@ -1,0 +1,66 @@
+package com.haibazo_bff_its_rct_webapi.service.impl;
+
+import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
+import com.haibazo_bff_its_rct_webapi.dto.request.AddTagRequest;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctTagResponse;
+import com.haibazo_bff_its_rct_webapi.enums.ApiError;
+import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
+import com.haibazo_bff_its_rct_webapi.model.Language;
+import com.haibazo_bff_its_rct_webapi.model.Tag;
+import com.haibazo_bff_its_rct_webapi.repository.TagRepository;
+import com.haibazo_bff_its_rct_webapi.service.TagService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class TagServiceImpl implements TagService {
+
+    private final TagRepository tagRepository;
+
+    @Override
+    public APICustomize<ItsRctTagResponse> add(AddTagRequest request) {
+        Tag tag = new Tag();
+        tag.setName(request.getName());
+
+        Tag savedTag = tagRepository.save(tag);
+
+        ItsRctTagResponse tagResponse = new ItsRctTagResponse(
+                savedTag.getId(),
+                savedTag.getName(),
+                savedTag.getCreatedAt(),
+                savedTag.getUpdatedAt()
+        );
+
+        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), tagResponse);
+    }
+
+    @Override
+    public APICustomize<List<ItsRctTagResponse>> tags() {
+        List<Tag> tags = tagRepository.findAll();
+
+        List<ItsRctTagResponse> tagResponses = tags.stream()
+                .map(tag -> new ItsRctTagResponse(
+                        tag.getId(),
+                        tag.getName(),
+                        tag.getCreatedAt(),
+                        tag.getUpdatedAt()
+                )).toList();
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), tagResponses);
+    }
+
+    @Override
+    public APICustomize<ItsRctTagResponse> tag() {
+
+        Tag tag = tagRepository.findById(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Language", "code", code));
+    }
+
+    @Override
+    public APICustomize<String> delete(Long id) {
+        return null;
+    }
+}
