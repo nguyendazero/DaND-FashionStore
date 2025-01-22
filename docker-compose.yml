@@ -63,16 +63,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-#  haibazo-devops-eureka:
-#    image: hbzkhanhnk/haibazo-devops-eureka:latest
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#      target: haibazo-devops-eureka-runner
-#    container_name: eureka-server
-#    ports:
-#      - "3099:3099"
-
   mysql:
     image: "mysql:latest"
     container_name: mysql
