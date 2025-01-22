@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
 
         // Gọi account-service để lấy thông tin tài khoản
         ItsRctUserResponse userResponse = webClient.get()
-                .uri("/api/bff/its-rct/v1/user/account/{id}", user.getHaibazoAccountId())
+                .uri("/api/bff/its-rct/v1/account/user/{id}", user.getHaibazoAccountId())
                 .retrieve()
                 .bodyToMono(ItsRctUserResponse.class)
                 .block();
