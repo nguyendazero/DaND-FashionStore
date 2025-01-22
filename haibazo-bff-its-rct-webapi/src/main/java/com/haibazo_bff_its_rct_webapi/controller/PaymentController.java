@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/payment")
+@RequestMapping("/api/payment/ecommerce")
 public class PaymentController {
 }

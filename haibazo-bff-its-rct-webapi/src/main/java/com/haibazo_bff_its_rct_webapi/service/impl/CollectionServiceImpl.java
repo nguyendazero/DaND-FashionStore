@@ -58,7 +58,7 @@ public class CollectionServiceImpl implements CollectionService {
                 String imageName = request.getCollectionType().replace(" ", "_");
                 InputStream inputStream = imageFile.getInputStream();
                 minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-                collection.setImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+                collection.setImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
             } else {
                 collection.setImageUrl(null);
             }
@@ -137,7 +137,7 @@ public class CollectionServiceImpl implements CollectionService {
 
                 // Upload the new image to MinIO
                 minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-                collection.setImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+                collection.setImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
             }
 
             // Save the updated category to the repository

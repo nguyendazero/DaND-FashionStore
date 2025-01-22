@@ -243,7 +243,7 @@ public class ProductServiceImpl implements ProductService {
             String imageName = request.getName().replace(" ", "_") + "_highlighted";
             InputStream inputStream = imageFile.getInputStream();
             minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-            newProduct.setHighLightedImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+            newProduct.setHighLightedImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
         } else {
             throw new BadRequestException("BADREQUEST4001E");
         }
@@ -263,7 +263,7 @@ public class ProductServiceImpl implements ProductService {
                 minioService.putObject(BUCKET_NAME, imageName, inputStream, image.getContentType());
 
                 // Tạo URL cho ảnh
-                String imageUrl = "/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName;
+                String imageUrl = "/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName;
 
                 // Lưu thông tin ảnh vào cơ sở dữ liệu
                 Image imageEntity = new Image();
@@ -320,11 +320,14 @@ public class ProductServiceImpl implements ProductService {
             minioService.deleteObject(BUCKET_NAME, highlightedImageName);
         }
 
-        // Xóa tất cả ảnh liên quan đến sản phẩm
+        // Xóa tất cả ảnh liên quan đến sản phẩm từ cơ sở dữ liệu
         List<Image> images = imageRepository.findByEntityIdAndEntityType(productId, EntityType.PRODUCT);
         for (Image image : images) {
             String imageName = image.getImageUrl().substring(image.getImageUrl().lastIndexOf("/") + 1);
             minioService.deleteObject(BUCKET_NAME, imageName);
+
+            // Xóa ảnh khỏi cơ sở dữ liệu
+            imageRepository.delete(image);
         }
 
         // Xóa sản phẩm
@@ -384,7 +387,7 @@ public class ProductServiceImpl implements ProductService {
             String imageName = request.getName().replace(" ", "_") + "_highlighted";
             InputStream inputStream = imageFile.getInputStream();
             minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-            product.setHighLightedImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+            product.setHighLightedImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
         }
 
         // Xóa các ảnh cũ liên quan đến sản phẩm

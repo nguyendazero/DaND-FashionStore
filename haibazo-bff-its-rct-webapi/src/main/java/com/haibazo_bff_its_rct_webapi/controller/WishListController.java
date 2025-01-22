@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/bff/its-rct/v1")
+@RequestMapping("/api/bff/its-rct/v1/ecommerce")
 public class WishListController {
 
     private final WishlistService wishlistService;

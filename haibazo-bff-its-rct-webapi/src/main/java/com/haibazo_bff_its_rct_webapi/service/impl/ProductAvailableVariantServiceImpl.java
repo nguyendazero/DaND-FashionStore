@@ -120,7 +120,7 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
         InputStream inputStream = imageFile.getInputStream();
         minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
         // Cập nhật lại URL hình ảnh sau khi lưu
-        productAvailableVariant.setHighLightedImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+        productAvailableVariant.setHighLightedImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
 
         // Lưu biến thể vào DB
         ProductAvailableVariant savedProductAvailableVariant = productAvailableVariantRepository.save(productAvailableVariant);

@@ -65,7 +65,7 @@ public class AccountServiceImpl implements AccountService {
         // Tạo đối tượng User và gửi yêu cầu tạo người dùng
         UserRequest user = new UserRequest(savedAccount.getHaibazoAccountId());
         Long userId = webClient.post()
-                .uri("/api/bff/its-rct/v1/public/user/create")
+                .uri("/api/bff/its-rct/v1/ecommerce/public/user/create")
                 .bodyValue(user)
                 .retrieve()
                 .bodyToMono(Long.class)

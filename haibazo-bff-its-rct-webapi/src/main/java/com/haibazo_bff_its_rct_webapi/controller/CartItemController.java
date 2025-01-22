@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/bff/its-rct/v1")
+@RequestMapping("/api/bff/its-rct/v1/ecommerce")
 public class CartItemController {
 
     private final CartItemService cartItemService;

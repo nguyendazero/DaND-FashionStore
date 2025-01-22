@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/bff/its-rct/v1")
+@RequestMapping("/api/bff/its-rct/v1/ecommerce")
 public class CollectionProductController {
 
     private final CollectionProductService collectionProductService;

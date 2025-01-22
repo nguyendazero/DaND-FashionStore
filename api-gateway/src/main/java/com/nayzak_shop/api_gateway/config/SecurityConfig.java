@@ -30,17 +30,17 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/bff/its-rct/v1/account/public/**",
-            "/api/ecommerce/public/**"
+            "/api/bff/its-rct/v1/ecommerce/public/**"
     };
 
     private static final String[] ADMIN_ENDPOINTS = {
             "/api/bff/its-rct/v1/account/admin/**",
-            "/api/ecommerce/admin/**"
+            "/api/bff/its-rct/v1/ecommerce/admin/**"
     };
 
     private static final String[] USER_ENDPOINTS = {
             "/api/bff/its-rct/v1/account/user/**",
-            "/api/ecommerce/user/**"
+            "/api/bff/its-rct/v1/ecommerce/user/**"
     };
 
     @Bean

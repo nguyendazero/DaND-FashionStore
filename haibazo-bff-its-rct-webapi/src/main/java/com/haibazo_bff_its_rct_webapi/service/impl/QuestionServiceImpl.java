@@ -77,7 +77,7 @@ public class QuestionServiceImpl implements QuestionService {
                     minioService.putObject(BUCKET_NAME, imageName, inputStream, image.getContentType());
 
                     // Tạo URL cho ảnh
-                    String imageUrl = "/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName;
+                    String imageUrl = "/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName;
 
                     // Tạo và lưu thông tin ảnh vào cơ sở dữ liệu
                     Image imageEntity = new Image();

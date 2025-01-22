@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/bff/its-rct/v1")
+@RequestMapping("/api/bff/its-rct/v1/ecommerce")
 public class PostTagController {
 
     private final PostTagService postTagService;

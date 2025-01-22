@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/api/bff/its-rct/v1")
+@RequestMapping("/api/bff/its-rct/v1/ecommerce")
 public class CollectionController {
 
     private final CollectionService collectionService;

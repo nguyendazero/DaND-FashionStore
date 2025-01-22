@@ -11,25 +11,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/bff/its-rct/v1/ecommerce")
+@RequestMapping("/api/bff/its-rct/v1/account")
 @RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
 
-    @GetMapping("/account/user/{id}")
+    @GetMapping("/user/account/{id}")
     public ResponseEntity<?> getAccountById(@PathVariable Long id) {
         Account account = accountService.getAccountById(id);
         return ResponseEntity.ok(account);
     }
 
-    @PostMapping("/account/public/sign-up")
+    @PostMapping("/public/sign-up")
     public ResponseEntity<?> signUp(@RequestBody SignUpRequest accountRequest) {
         APICustomize<ItsRctUserResponse> response = accountService.signUp(accountRequest);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    @PostMapping("/account/public/sign-in")
+    @PostMapping("/public/sign-in")
     public ResponseEntity<?> signIn(@RequestBody SignInRequest request) {
         APICustomize<ItsRctUserResponse> response = accountService.signIn(request);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);

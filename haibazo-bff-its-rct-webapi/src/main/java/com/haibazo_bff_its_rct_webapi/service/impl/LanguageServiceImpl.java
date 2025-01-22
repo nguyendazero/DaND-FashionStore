@@ -88,7 +88,7 @@ public class LanguageServiceImpl implements LanguageService {
             Language language = new Language();
             language.setCode(request.getCode());
             language.setName(request.getName());
-            language.setImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/"+ imageName);
+            language.setImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/"+ imageName);
             Language savedLanguage = languageRepository.save(language);
 
             //Xóa cache in Redis to update new data

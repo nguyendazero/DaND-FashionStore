@@ -74,7 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
                 String imageName = request.getName().replace(" ", "_");
                 InputStream inputStream = imageFile.getInputStream();
                 minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-                category.setImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+                category.setImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
             } else {
                 category.setImageUrl(null);
             }
@@ -146,7 +146,7 @@ public class CategoryServiceImpl implements CategoryService {
 
                 // Upload the new image to MinIO
                 minioService.putObject(BUCKET_NAME, imageName, inputStream, imageFile.getContentType());
-                category.setImageUrl("/api/bff/its-rct/v1/public/image/" + BUCKET_NAME + "/" + imageName);
+                category.setImageUrl("/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + imageName);
             }
 
             // Save the updated category to the repository
