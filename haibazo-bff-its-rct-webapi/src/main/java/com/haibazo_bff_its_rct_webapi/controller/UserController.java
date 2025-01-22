@@ -53,4 +53,11 @@ public class UserController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
+    @DeleteMapping("/admin/user")
+    public ResponseEntity<?> delete(@RequestParam Long id){
+        APICustomize<String> response = userService.delete(id);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+
 }

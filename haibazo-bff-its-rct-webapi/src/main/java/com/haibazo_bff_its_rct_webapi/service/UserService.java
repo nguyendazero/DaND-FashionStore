@@ -21,4 +21,6 @@ public interface UserService {
     public APICustomize<List<ItsRctProductResponse>> wishListByUserId(Long id);
 
     public APICustomize<List<ItsRctAddressResponse>> getAddressesByUserId(Long userId);
+
+    public APICustomize<String> delete(Long id);
 }

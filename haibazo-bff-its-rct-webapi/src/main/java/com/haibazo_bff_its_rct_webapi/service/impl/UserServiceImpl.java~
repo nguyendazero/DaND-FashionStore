@@ -189,19 +189,4 @@ public class UserServiceImpl implements UserService {
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), addressResponses);
     }
 
-    @Override
-    public APICustomize<String> delete(Long id) {
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id.toString()));
-
-        // Gửi sự kiện DeleteUserEvent đến Kafka
-        DeleteUserEvent deleteUserEvent = new DeleteUserEvent(user.getHaibazoAccountId());
-        kafkaTemplate.send("userDeletionTopic", deleteUserEvent);
-
-        userRepository.delete(user);
-        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Successfully deleted user with id = " + id);
-    }
-
-
 }
