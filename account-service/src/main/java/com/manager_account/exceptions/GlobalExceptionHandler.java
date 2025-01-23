@@ -1,8 +1,6 @@
 package com.manager_account.exceptions;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.manager_account.dto.response.ErrorDetail;
 import jakarta.servlet.http.HttpServletRequest;
@@ -132,31 +130,5 @@ public class GlobalExceptionHandler {
         errorResponse.setErrors(errors);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
-
-
-
-
-//    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-//    public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-//        // Xử lý khi truyền lỗi các tham số
-//        ErrorResponse errorResponse = new ErrorResponse(
-//                "Invalid parameter: " + ex.getName(), 
-//                "Error Code: 400"
-//        );
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-//    }
-    
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-//        Map<String, String> errors = new HashMap<>();
-//
-//        ex.getBindingResult().getAllErrors().forEach((error) -> {
-//            String fieldName = ((FieldError) error).getField();
-//            String errorMessage = error.getDefaultMessage();
-//            errors.put(fieldName, errorMessage);
-//        });
-//
-//        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
-//    }
     
 }
