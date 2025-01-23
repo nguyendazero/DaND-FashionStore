@@ -60,9 +60,7 @@ public class JwtUtils {
 
         return token;
     }
-
-
-
+    
     public String generateRefreshTokenFromUsername(UserDetails userDetails) {
         String username = userDetails.getUsername();
         return Jwts.builder()
@@ -72,8 +70,7 @@ public class JwtUtils {
                 .signWith(key())
                 .compact();
     }
-
-
+    
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key())
@@ -82,8 +79,7 @@ public class JwtUtils {
                 .getBody()
                 .getSubject();
     }
-
-
+    
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
@@ -108,6 +104,5 @@ public class JwtUtils {
         }
         return false;
     }
-
-
+    
 }

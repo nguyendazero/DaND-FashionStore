@@ -55,5 +55,11 @@ public class Account {
 
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
+    @Column(name = "refresh_expires_at")
+    private LocalDateTime refreshExpiresAt;
 
 }

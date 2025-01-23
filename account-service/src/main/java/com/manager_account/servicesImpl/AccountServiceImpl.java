@@ -139,9 +139,19 @@ public class AccountServiceImpl implements AccountService {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
-            // Tạo JWT token và refresh token
+            // Tạo JWT token và refresh token mới
             String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
             String refreshToken = jwtUtils.generateRefreshTokenFromUsername(userDetails);
+
+            // Cập nhật refresh token
+            account.setRefreshToken(refreshToken);
+
+            // Kiểm tra và thiết lập refreshExpiresAt nếu chưa có
+            if (account.getRefreshExpiresAt() == null) {
+                account.setRefreshExpiresAt(LocalDateTime.now().plusDays(30)); // 30 ngày
+            }
+
+            accountRepository.save(account); // Cập nhật tài khoản
 
             // Tạo response với đầy đủ các trường cần thiết
             SignInResponse response = new SignInResponse(
