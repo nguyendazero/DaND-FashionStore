@@ -1,6 +1,6 @@
 package com.manager_account.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,13 +18,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
-
-    @Autowired
-    private AuthAccessDenied accessDeniedHandler;
+    
+    private final AuthEntryPointJwt unauthorizedHandler;
+    private final AuthAccessDenied accessDeniedHandler;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -62,6 +60,5 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
+    
 }
