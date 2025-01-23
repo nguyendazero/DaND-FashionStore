@@ -13,6 +13,7 @@ import com.haibazo_bff_its_rct_webapi.model.UserTemp;
 import com.haibazo_bff_its_rct_webapi.repository.ContactRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.ContactService;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -28,18 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContactServiceImpl implements ContactService {
 
-    @Value("${spring.app.jwtSecret}")
-    private String jwtSecret;
-    
+    private final TokenUtil tokenUtil;
     private final ContactRepository contactRepository;
     private final UserTempRepository userTempRepository;
-    private final WebClient.Builder webClientBuilder;
-    private WebClient webClient;
-
-    @PostConstruct // Khởi tạo WebClient khi bean được tạo
-    public void init() {
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8081").build();
-    }
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
@@ -47,15 +39,15 @@ public class ContactServiceImpl implements ContactService {
         Contact contact = new Contact();
 
         // Lấy JWT từ header
-        String token = extractToken(authorizationHeader);
+        String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = null;
 
         if (token != null) {
             // Giải mã token để lấy haibazoAccountId
-            Long haibazoAccountId = getHaibazoAccountIdFromToken(token);
+            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
 
             // Gọi account-service để lấy thông tin tài khoản
-            userResponse = getUserByHaibazoAccountId(haibazoAccountId);
+            userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
         }
 
         // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
@@ -108,41 +100,6 @@ public class ContactServiceImpl implements ContactService {
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
     }
-
-    // Phương thức để lấy token từ header
-    private String extractToken(String authorizationHeader) {
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7);
-        }
-        return null;
-    }
-
-    // Phương thức để giải mã token và lấy haibazoAccountId
-    private Long getHaibazoAccountIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(jwtSecret) // Sử dụng secret key của bạn
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        // Trả về haibazoAccountId từ claims
-        return Long.valueOf(claims.get("haibazoAccountId").toString());
-    }
-
-    // Phương thức để gọi account-service và lấy thông tin tài khoản
-    private ItsRctUserResponse getUserByHaibazoAccountId(Long haibazoAccountId) {
-        return webClient.get()
-                .uri("/api/bff/its-rct/v1/account/user/account/{id}", haibazoAccountId)
-                .retrieve()
-                .bodyToMono(ItsRctUserResponse.class)
-                .block();
-    }
-    
-    
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////
-    
-    
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
