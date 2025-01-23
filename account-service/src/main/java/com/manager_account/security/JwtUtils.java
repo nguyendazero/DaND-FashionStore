@@ -1,14 +1,18 @@
 package com.manager_account.security;
-
+import com.manager_account.entities.Account;
+import com.manager_account.exceptions.ResourceNotFoundException;
+import com.manager_account.repositories.AccountRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -18,6 +22,13 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private AccountRepository accountRepository;
+    
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
     @Value("${spring.app.jwtSecret}")
@@ -35,7 +46,7 @@ public class JwtUtils {
         return null;
     }
 
-    public String generateTokenFromUsername(UserDetails userDetails) {
+    public String generateTokenFromUserDetails(UserDetails userDetails) {
         String username = userDetails.getUsername();
 
         // Lấy danh sách vai trò từ UserDetails
@@ -55,13 +66,43 @@ public class JwtUtils {
         return token;
     }
     
-    public String generateRefreshTokenFromUsername(UserDetails userDetails) {
+    public String generateRefreshTokenFromUserDetails(UserDetails userDetails) {
         String username = userDetails.getUsername();
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .signWith(key())
                 .compact();
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        try {
+            // Xác thực refresh token và lấy thông tin người dùng
+            String username = Jwts.parserBuilder()
+                    .setSigningKey(key())
+                    .build()
+                    .parseClaimsJws(refreshToken)
+                    .getBody()
+                    .getSubject();
+
+            // Tạo access token mới
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String newAccessToken = generateTokenFromUserDetails(userDetails);
+
+            // Tạo refresh token mới
+            String newRefreshToken = generateRefreshTokenFromUserDetails(userDetails);
+
+            // Lưu refresh token mới vào cơ sở dữ liệu
+            Account account = accountRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("Account", "username", username));
+
+            account.setRefreshToken(newRefreshToken);
+            accountRepository.save(account);
+
+            return newAccessToken;
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token", e);
+        }
     }
     
     public String getUserNameFromJwtToken(String token) {

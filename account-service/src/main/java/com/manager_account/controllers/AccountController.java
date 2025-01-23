@@ -42,17 +42,11 @@ public class AccountController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-//    @PostMapping("/refresh-token")
-//    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
-//        String refreshToken = request.get("refreshToken");
-//
-//        try {
-//            String newAccessToken = jwtUtils.refreshAccessToken(refreshToken);
-//
-//            return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
-//        }
-//    }
+    @PostMapping("/public/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        String newAccessToken = jwtUtils.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
+    }
 
 }

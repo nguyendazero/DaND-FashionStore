@@ -139,15 +139,19 @@ public class AccountServiceImpl implements AccountService {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
-            // Tạo JWT token và refresh token mới
-            String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
-            String refreshToken = jwtUtils.generateRefreshTokenFromUsername(userDetails);
+            // Tạo JWT token mới
+            String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
 
-            // Cập nhật refresh token
-            account.setRefreshToken(refreshToken);
+            // Kiểm tra refresh token
+            String currentRefreshToken = account.getRefreshToken();
+            LocalDateTime refreshExpiresAt = account.getRefreshExpiresAt();
 
-            // Kiểm tra và thiết lập refreshExpiresAt nếu chưa có
-            if (account.getRefreshExpiresAt() == null) {
+            // Kiểm tra nếu refresh token là null hoặc đã hết hạn
+            if (currentRefreshToken == null || (refreshExpiresAt != null && LocalDateTime.now().isAfter(refreshExpiresAt))) {
+                // Tạo refresh token mới
+                String refreshToken = jwtUtils.generateRefreshTokenFromUserDetails(userDetails);
+                account.setRefreshToken(refreshToken);
+                // Cập nhật thời gian hết hạn cho refresh token mới
                 account.setRefreshExpiresAt(LocalDateTime.now().plusDays(30)); // 30 ngày
             }
 
@@ -161,7 +165,7 @@ public class AccountServiceImpl implements AccountService {
                     account.getEmail(),
                     roles,
                     jwtToken,
-                    refreshToken
+                    account.getRefreshToken()
             );
 
             return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
