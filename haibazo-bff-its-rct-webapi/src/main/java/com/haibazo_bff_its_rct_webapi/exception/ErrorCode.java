@@ -1,9 +1,5 @@
 package com.haibazo_bff_its_rct_webapi.exception;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 public enum ErrorCode {
 
     HTTP_REQUEST_ENDPOINT_SUPPORT("9999", "BAD ENDPOINT");

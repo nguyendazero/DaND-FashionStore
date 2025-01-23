@@ -8,13 +8,15 @@ import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
 import com.manager_account.enums.ApiError;
+import com.manager_account.exceptions.ErrorSignInException;
+import com.manager_account.exceptions.ResourceAlreadyExistsException;
+import com.manager_account.exceptions.ResourceNotFoundException;
 import com.manager_account.repositories.AccountRepository;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -48,19 +50,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account getAccountById(Long id) {
         return accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id.toString()));
     }
 
     @Override
     public APICustomize<ItsRctUserResponse> signUp(SignUpRequest request) {
         // Kiểm tra xem email đã tồn tại chưa
         if (accountRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new ResourceAlreadyExistsException("Account", "email", request.getEmail());
         }
 
         // Kiểm tra xem username đã tồn tại chưa
         if (accountRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new ResourceAlreadyExistsException("Account", "username", request.getUsername());
         }
 
         // Tạo tài khoản mới
@@ -93,9 +95,7 @@ public class AccountServiceImpl implements AccountService {
                 .block();
 
         // Kiểm tra xem userId có null không
-        if (userId == null) {
-            throw new RuntimeException("Error creating user, userId is null");
-        }
+        if (userId == null) throw new ResourceNotFoundException("User", "id", "User ID is null");
 
         ItsRctUserResponse userResponse = new ItsRctUserResponse(
                 userId,
@@ -120,11 +120,11 @@ public class AccountServiceImpl implements AccountService {
             // Tìm kiếm tài khoản bằng username hoặc email
             Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
                     .orElseGet(() -> accountRepository.findByEmail(request.getUsernameOrEmail())
-                            .orElseThrow(() -> new RuntimeException("Invalid username or email")));
+                            .orElseThrow(ErrorSignInException::new));
 
             // Kiểm tra mật khẩu
             if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
-                throw new BadCredentialsException("Wrong username or password");
+                throw new ErrorSignInException();
             }
 
             // Xác thực tài khoản
@@ -155,10 +155,8 @@ public class AccountServiceImpl implements AccountService {
             );
 
             return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
-        } catch (BadCredentialsException e) {
-            throw new RuntimeException("Wrong username or password");
         } catch (Exception e) {
-            throw new RuntimeException("An error occurred during sign-in: " + e.getMessage());
+            throw new ErrorSignInException();
         }
     }
 }
