@@ -23,39 +23,20 @@ public class GlobalExceptionHandler {
     private final Properties messages;
     private final String host = "ecommerce-service";
 
+    public void loadMessages(InputStream input) throws IOException {
+        messages.load(input);
+    }
+
     public GlobalExceptionHandler() throws IOException {
         messages = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages_vn_VN.properties")) {
             if (input != null) {
                 messages.load(input);
             } else {
-                throw new IOException("File not found: messages_en_US.properties");
+                throw new IOException("File not found: messages_vn_VN.properties");
             }
         }
     }
-
-    //Xu ly khi xoa entity bi khoa ngoai tham chieu
-//    @ExceptionHandler(DataIntegrityViolationException.class)
-//    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(HttpServletRequest request) {
-//        ErrorResponse errorResponse = new ErrorResponse();
-//        errorResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
-//        errorResponse.setTimestamp(LocalDateTime.now().toString());
-//        errorResponse.setPath(request.getRequestURI());
-//
-//        List<ErrorDetail> errors = new ArrayList<>();
-//
-//        String errorKey = "DATAINTEGRITYVIOLATION4001E";
-//        ErrorDetail errorDetail = new ErrorDetail();
-//        errorDetail.setErrorCode("400");
-//        errorDetail.setErrorMessageId(errorKey);
-//        String errorMessage = messages.getProperty(errorKey).replace("{0}", host);
-//        errorDetail.setErrorMessage(errorMessage);
-//
-//        errors.add(errorDetail);
-//        errorResponse.setErrors(errors);
-//
-//        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-//    }
 
     @ExceptionHandler(MinSpendCouponException.class)
     public ResponseEntity<ErrorResponse> handleMinSpendCouponException(HttpServletRequest request, MinSpendCouponException ex) {
