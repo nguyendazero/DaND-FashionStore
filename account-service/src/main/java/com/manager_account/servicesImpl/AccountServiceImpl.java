@@ -5,16 +5,27 @@ import com.manager_account.dto.request.SignUpRequest;
 import com.manager_account.dto.request.UserRequest;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
+import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
 import com.manager_account.enums.ApiError;
 import com.manager_account.repositories.AccountRepository;
+import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +34,11 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final WebClient.Builder webClientBuilder; // Khai báo WebClient.Builder
     private WebClient webClient; // Khai báo WebClient
+
+    //Security
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
 
     @PostConstruct // Khởi tạo WebClient khi bean được tạo
     public void init() {
@@ -37,11 +53,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public APICustomize<ItsRctUserResponse> signUp(SignUpRequest request) {
-
+        // Kiểm tra xem email đã tồn tại chưa
         if (accountRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
+        // Kiểm tra xem username đã tồn tại chưa
         if (accountRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
@@ -49,7 +66,11 @@ public class AccountServiceImpl implements AccountService {
         // Tạo tài khoản mới
         Account newAccount = new Account();
         newAccount.setUsername(request.getUsername());
-        newAccount.setPassword(request.getPassword());
+
+        // Mã hóa mật khẩu trước khi lưu
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        newAccount.setPassword(encodedPassword);
+
         newAccount.setFullName(request.getName());
         newAccount.setEmail(request.getEmail());
         newAccount.setEnabled(true);
@@ -94,31 +115,50 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public APICustomize<ItsRctUserResponse> signIn(SignInRequest request) {
+    public APICustomize<SignInResponse> signIn(SignInRequest request) {
+        try {
+            // Tìm kiếm tài khoản bằng username hoặc email
+            Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
+                    .orElseGet(() -> accountRepository.findByEmail(request.getUsernameOrEmail())
+                            .orElseThrow(() -> new RuntimeException("Invalid username or email")));
 
-        Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
-                .orElseGet(() -> accountRepository.findByEmail(request.getUsernameOrEmail())
-                        .orElseThrow(() -> new RuntimeException("Invalid username or email")));
+            // Kiểm tra mật khẩu
+            if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+                throw new BadCredentialsException("Wrong username or password");
+            }
 
-        // Kiểm tra xem mật khẩu có khớp không
-        if (!request.getPassword().equals(account.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            // Xác thực tài khoản
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(account.getUsername(), request.getPassword())
+            );
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // Lấy danh sách roles từ authorities
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+
+            // Tạo JWT token và refresh token
+            String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+            String refreshToken = jwtUtils.generateRefreshTokenFromUsername(userDetails);
+
+            // Tạo response với đầy đủ các trường cần thiết
+            SignInResponse response = new SignInResponse(
+                    account.getId(),
+                    account.getUsername(),
+                    account.getFullName(),
+                    account.getEmail(),
+                    roles,
+                    jwtToken,
+                    refreshToken
+            );
+
+            return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Wrong username or password");
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred during sign-in: " + e.getMessage());
         }
-
-        ItsRctUserResponse accountResponse = new ItsRctUserResponse(
-                account.getId(),
-                account.getUsername(),
-                account.getEmail(),
-                account.getFullName(),
-                account.getHaibazoAccountId(),
-                account.isEnabled(),
-                account.getRole(),
-                account.getStatus(),
-                account.getAvatar(),
-                account.getCreatedAt(),
-                account.getUpdatedAt()
-        );
-
-        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), accountResponse);
     }
 }

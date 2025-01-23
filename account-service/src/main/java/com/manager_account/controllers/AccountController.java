@@ -4,6 +4,7 @@ import com.manager_account.dto.request.SignInRequest;
 import com.manager_account.dto.request.SignUpRequest;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
+import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
 import com.manager_account.services.AccountService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class AccountController {
 
     @PostMapping("/public/sign-in")
     public ResponseEntity<?> signIn(@RequestBody SignInRequest request) {
-        APICustomize<ItsRctUserResponse> response = accountService.signIn(request);
+        APICustomize<SignInResponse> response = accountService.signIn(request);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
