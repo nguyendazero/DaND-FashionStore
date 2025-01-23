@@ -27,7 +27,6 @@ public class ContactController {
 
         // Gọi service để thêm contact, truyền header JWT
         APICustomize<ItsRctContactResponse> response = contactService.add(request, authorizationHeader);
-
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

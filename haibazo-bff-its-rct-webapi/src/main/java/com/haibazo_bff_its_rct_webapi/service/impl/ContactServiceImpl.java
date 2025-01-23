@@ -7,7 +7,6 @@ import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.Contact;
-import com.haibazo_bff_its_rct_webapi.model.Product;
 import com.haibazo_bff_its_rct_webapi.model.User;
 import com.haibazo_bff_its_rct_webapi.model.UserTemp;
 import com.haibazo_bff_its_rct_webapi.repository.ContactRepository;
@@ -15,13 +14,8 @@ import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.ContactService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 
@@ -56,22 +50,9 @@ public class ContactServiceImpl implements ContactService {
             contact.setEmail(userResponse.getEmail());
             contact.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
         } else {
-            // Nếu chưa đăng nhập, kiểm tra thông tin từ request
-            if (request.getFullName() != null) {
-                contact.setFullName(request.getFullName());
-            } else {
-                // Xử lý trường hợp không có thông tin fullName
-                // Ví dụ: có thể throw exception hoặc gán giá trị mặc định
-                throw new IllegalArgumentException("Full name is required.");
-            }
-
-            if (request.getEmail() != null) {
-                contact.setEmail(request.getEmail());
-            } else {
-                // Xử lý trường hợp không có thông tin email
-                throw new IllegalArgumentException("Email is required.");
-            }
-
+            contact.setFullName(request.getFullName());
+            contact.setEmail(request.getEmail());
+            
             // Tạo UserTemp
             UserTemp userTemp = new UserTemp();
             userTemp.setFullName(contact.getFullName());
