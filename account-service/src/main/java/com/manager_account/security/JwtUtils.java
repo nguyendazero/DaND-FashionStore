@@ -6,6 +6,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
-
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private AccountRepository accountRepository;
+    
+    private final UserDetailsService userDetailsService;
+    private final AccountRepository accountRepository;
     
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
@@ -90,14 +89,11 @@ public class JwtUtils {
             Account account = accountRepository.findByUsername(username)
                     .orElseThrow(() -> new ResourceNotFoundException("Account", "username", username));
 
-            // Kiểm tra xem refresh token có khớp với token trong cơ sở dữ liệu không
-            if (!refreshToken.equals(account.getRefreshToken())) {
-                throw new RuntimeException("Refresh token does not match");
-            }
-
-            // Kiểm tra thời hạn của refresh token
-            if (account.getRefreshExpiresAt() == null || account.getRefreshExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Refresh token has expired");
+            // Kiểm tra xem refresh token có hợp lệ?
+            if (!refreshToken.equals(account.getRefreshToken()) ||
+                    account.getRefreshExpiresAt() == null ||
+                    account.getRefreshExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Invalid refresh token");
             }
 
             // Tạo access token mới
