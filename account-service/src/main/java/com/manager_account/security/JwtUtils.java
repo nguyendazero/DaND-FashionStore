@@ -26,12 +26,6 @@ public class JwtUtils {
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    @Value("${spring.app.refreshTokenSecret}")
-    private String refreshTokenSecret;
-
-    @Value("${spring.app.refreshTokenExpirationMs}")
-    private int refreshTokenExpirationMs;
-
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         logger.debug("Authorization Header: {}", bearerToken);
@@ -66,7 +60,6 @@ public class JwtUtils {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + refreshTokenExpirationMs))
                 .signWith(key())
                 .compact();
     }
