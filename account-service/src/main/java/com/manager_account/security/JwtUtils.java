@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,6 +86,20 @@ public class JwtUtils {
                     .getBody()
                     .getSubject();
 
+            // Lấy thông tin tài khoản từ cơ sở dữ liệu
+            Account account = accountRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("Account", "username", username));
+
+            // Kiểm tra xem refresh token có khớp với token trong cơ sở dữ liệu không
+            if (!refreshToken.equals(account.getRefreshToken())) {
+                throw new RuntimeException("Refresh token does not match");
+            }
+
+            // Kiểm tra thời hạn của refresh token
+            if (account.getRefreshExpiresAt() == null || account.getRefreshExpiresAt().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Refresh token has expired");
+            }
+
             // Tạo access token mới
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             String newAccessToken = generateTokenFromUserDetails(userDetails);
@@ -93,15 +108,12 @@ public class JwtUtils {
             String newRefreshToken = generateRefreshTokenFromUserDetails(userDetails);
 
             // Lưu refresh token mới vào cơ sở dữ liệu
-            Account account = accountRepository.findByUsername(username)
-                    .orElseThrow(() -> new ResourceNotFoundException("Account", "username", username));
-
             account.setRefreshToken(newRefreshToken);
             accountRepository.save(account);
 
             return newAccessToken;
         } catch (Exception e) {
-            throw new RuntimeException("Invalid refresh token", e);
+            throw new RuntimeException("Invalid refresh token");
         }
     }
     
