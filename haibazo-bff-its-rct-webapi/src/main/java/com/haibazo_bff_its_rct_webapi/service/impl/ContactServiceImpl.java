@@ -3,17 +3,24 @@ package com.haibazo_bff_its_rct_webapi.service.impl;
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddContactRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctContactResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.Contact;
 import com.haibazo_bff_its_rct_webapi.model.Product;
+import com.haibazo_bff_its_rct_webapi.model.User;
 import com.haibazo_bff_its_rct_webapi.model.UserTemp;
 import com.haibazo_bff_its_rct_webapi.repository.ContactRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.ContactService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 
@@ -21,28 +28,75 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContactServiceImpl implements ContactService {
 
+    @Value("${spring.app.jwtSecret}")
+    private String jwtSecret;
+    
     private final ContactRepository contactRepository;
     private final UserTempRepository userTempRepository;
+    private final WebClient.Builder webClientBuilder;
+    private WebClient webClient;
+
+    @PostConstruct // Khởi tạo WebClient khi bean được tạo
+    public void init() {
+        this.webClient = webClientBuilder.baseUrl("http://localhost:8081").build();
+    }
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctContactResponse> add(AddContactRequest request) {
+    public APICustomize<ItsRctContactResponse> add(AddContactRequest request, String authorizationHeader) {
         Contact contact = new Contact();
-        contact.setFullName(request.getFullName());
-        contact.setEmail(request.getEmail());
+
+        // Lấy JWT từ header
+        String token = extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = null;
+
+        if (token != null) {
+            // Giải mã token để lấy haibazoAccountId
+            Long haibazoAccountId = getHaibazoAccountIdFromToken(token);
+
+            // Gọi account-service để lấy thông tin tài khoản
+            userResponse = getUserByHaibazoAccountId(haibazoAccountId);
+        }
+
+        // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
+        if (userResponse != null) {
+            contact.setFullName(userResponse.getFullName());
+            contact.setEmail(userResponse.getEmail());
+            contact.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+        } else {
+            // Nếu chưa đăng nhập, kiểm tra thông tin từ request
+            if (request.getFullName() != null) {
+                contact.setFullName(request.getFullName());
+            } else {
+                // Xử lý trường hợp không có thông tin fullName
+                // Ví dụ: có thể throw exception hoặc gán giá trị mặc định
+                throw new IllegalArgumentException("Full name is required.");
+            }
+
+            if (request.getEmail() != null) {
+                contact.setEmail(request.getEmail());
+            } else {
+                // Xử lý trường hợp không có thông tin email
+                throw new IllegalArgumentException("Email is required.");
+            }
+
+            // Tạo UserTemp
+            UserTemp userTemp = new UserTemp();
+            userTemp.setFullName(contact.getFullName());
+            userTemp.setEmail(contact.getEmail());
+            userTemp.setAvatar(null);
+            userTempRepository.save(userTemp);
+
+            contact.setUserTemp(userTemp);
+        }
+
+        // Thiết lập thông điệp
         contact.setMessage(request.getMessage());
-        contact.setUser(null);
 
-        UserTemp userTemp = new UserTemp();
-        userTemp.setFullName(request.getFullName());
-        userTemp.setEmail(request.getEmail());
-        userTemp.setAvatar(null);
-        userTempRepository.save(userTemp);
-
-        contact.setUserTemp(userTemp);
-
+        // Lưu contact vào cơ sở dữ liệu
         Contact savedContact = contactRepository.save(contact);
 
+        // Tạo phản hồi
         ItsRctContactResponse response = new ItsRctContactResponse(
                 savedContact.getId(),
                 savedContact.getFullName(),
@@ -54,6 +108,41 @@ public class ContactServiceImpl implements ContactService {
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
     }
+
+    // Phương thức để lấy token từ header
+    private String extractToken(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
+    }
+
+    // Phương thức để giải mã token và lấy haibazoAccountId
+    private Long getHaibazoAccountIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(jwtSecret) // Sử dụng secret key của bạn
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        // Trả về haibazoAccountId từ claims
+        return Long.valueOf(claims.get("haibazoAccountId").toString());
+    }
+
+    // Phương thức để gọi account-service và lấy thông tin tài khoản
+    private ItsRctUserResponse getUserByHaibazoAccountId(Long haibazoAccountId) {
+        return webClient.get()
+                .uri("/api/bff/its-rct/v1/account/user/account/{id}", haibazoAccountId)
+                .retrieve()
+                .bodyToMono(ItsRctUserResponse.class)
+                .block();
+    }
+    
+    
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")

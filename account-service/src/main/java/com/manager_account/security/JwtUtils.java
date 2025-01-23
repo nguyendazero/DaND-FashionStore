@@ -49,6 +49,9 @@ public class JwtUtils {
     public String generateTokenFromUserDetails(UserDetails userDetails) {
         String username = userDetails.getUsername();
 
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "username", username));
+
         // Lấy danh sách vai trò từ UserDetails
         List<String> roleNames = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -58,6 +61,7 @@ public class JwtUtils {
         String token = Jwts.builder()
                 .setSubject(username)
                 .claim("roles", roleNames)
+                .claim("haibazoAccountId", account.getHaibazoAccountId())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)

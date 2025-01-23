@@ -23,7 +23,12 @@ public class User extends BaseEntity{
     private Long id;
 
     @Column(name = "haibazo_account_id", nullable = false)
-    private long haibazoAccountId;
+    private Long haibazoAccountId;
+
+    public User(Long id, Long haibazoAuthAlias) {
+        this.id = id;
+        this.haibazoAccountId = haibazoAuthAlias;
+    }
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserRole> userRoles = new ArrayList<>();
@@ -60,4 +65,5 @@ public class User extends BaseEntity{
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers = new ArrayList<>();
+    
 }

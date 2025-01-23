@@ -4,6 +4,7 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddContactRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctContactResponse;
 import com.haibazo_bff_its_rct_webapi.service.ContactService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,19 +20,24 @@ public class ContactController {
 
     private final ContactService contactService;
 
-    @PostMapping("/admin/contact")
-    public ResponseEntity<?> create(@RequestBody AddContactRequest request) {
-        APICustomize<ItsRctContactResponse> response = contactService.add(request);
+    @PostMapping("/public/contact")
+    public ResponseEntity<?> create(@RequestBody AddContactRequest request, HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+
+        // Gọi service để thêm contact, truyền header JWT
+        APICustomize<ItsRctContactResponse> response = contactService.add(request, authorizationHeader);
+
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    @GetMapping("public/contact")
+    @GetMapping("admin/contact")
     public ResponseEntity<?> contact(@RequestParam Long id) {
         APICustomize<ItsRctContactResponse> response = contactService.contact(id);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    @GetMapping("public/contact/contacts")
+    @GetMapping("admin/contact/contacts")
     public ResponseEntity<?> contacts() {
         APICustomize<List<ItsRctContactResponse>> response = contactService.contacts();
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);

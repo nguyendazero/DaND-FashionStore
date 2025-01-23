@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ContactService {
 
-    public APICustomize<ItsRctContactResponse> add(AddContactRequest request);
+    public APICustomize<ItsRctContactResponse> add(AddContactRequest request, String authorizationHeader);
 
     public APICustomize<List<ItsRctContactResponse>> contacts();
 
