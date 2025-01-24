@@ -1,16 +1,16 @@
 package com.haibazo_bff_its_rct_webapi.service.impl;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
-import com.haibazo_bff_its_rct_webapi.dto.request.AddWishesRequest;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceAlreadyExistsException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.*;
-import com.haibazo_bff_its_rct_webapi.repository.CouponRepository;
 import com.haibazo_bff_its_rct_webapi.repository.ProductRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserRepository;
 import com.haibazo_bff_its_rct_webapi.repository.WishListRepository;
 import com.haibazo_bff_its_rct_webapi.service.WishlistService;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,19 +22,25 @@ public class WishListServiceImpl implements WishlistService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final WishListRepository wishListRepository;
+    private final TokenUtil tokenUtil;
 
     @Override
-    public APICustomize<String> addWishes(AddWishesRequest request) {
+    public APICustomize<String> addWishes(Long productId, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId().toString()));
+        assert userResponse != null;
+        User user = userRepository.findById(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
 
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", request.getProductId().toString()));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
 
-
-        if (wishListRepository.existsByUserIdAndProductId(user.getId(), product.getId())){
-            throw new ResourceAlreadyExistsException("Wishes", "UserId va ProductId",
+        if (wishListRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
+            throw new ResourceAlreadyExistsException("Wishes", "UserId và ProductId",
                     "User ID: " + user.getId() + ", Product ID: " + product.getId());
         }
 
@@ -48,22 +54,27 @@ public class WishListServiceImpl implements WishlistService {
 
     @Override
     @Transactional
-    public APICustomize<String> deleteWishes(AddWishesRequest request) {
+    public APICustomize<String> deleteWishes(Long productId, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId().toString()));
+        assert userResponse != null;
+        User user = userRepository.findById(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
 
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", request.getProductId().toString()));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
 
         if (!wishListRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
-            throw new ResourceNotFoundException("Wishes", "UserId and ProductId",
+            throw new ResourceNotFoundException("Wishes", "UserId và ProductId",
                     "User with ID: " + user.getId() + " does not have the product with ID: " + product.getId() + " in wishlist.");
         }
 
         wishListRepository.deleteByUserIdAndProductId(user.getId(), product.getId());
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Wishes deleted successfully");
-
     }
 }
