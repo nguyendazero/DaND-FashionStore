@@ -24,8 +24,6 @@ public class ContactController {
     public ResponseEntity<?> create(@RequestBody AddContactRequest request, HttpServletRequest httpRequest) {
         // Lấy header Authorization từ yêu cầu
         String authorizationHeader = httpRequest.getHeader("Authorization");
-
-        // Gọi service để thêm contact, truyền header JWT
         APICustomize<ItsRctContactResponse> response = contactService.add(request, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }

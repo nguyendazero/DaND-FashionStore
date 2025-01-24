@@ -7,9 +7,11 @@ import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.event.DeleteUserEvent;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
+import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.*;
 import com.haibazo_bff_its_rct_webapi.service.*;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,8 @@ public class UserServiceImpl implements UserService {
     private final ReviewRepository reviewRepository;
     private final ProductAvailableVariantService productAvailableVariantService;
     private final StyleService styleService;
+    private final TokenUtil tokenUtil;
+
 
     //Kafka
     private final KafkaTemplate<String, DeleteUserEvent> kafkaTemplate;
@@ -53,10 +57,17 @@ public class UserServiceImpl implements UserService {
     @SneakyThrows
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctUserResponse> getUserById(Long id) {
+    public APICustomize<ItsRctUserResponse> getUserByToken(String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
 
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("User", "id", id.toString()));
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
 
         // Gọi account-service để lấy thông tin tài khoản
         ItsRctUserResponse userResponse = webClient.get()
@@ -84,17 +95,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<List<ItsRctCouponResponse>> couponsByUserId(Long id) {
+    public APICustomize<List<ItsRctCouponResponse>> couponsByToken(String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id.toString()));
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
 
         // Lấy danh sách các userCoupon liên quan đến user
-        List<UserCoupon> userCoupons = userCouponRepository.findByUserId(id);
+        List<UserCoupon> userCoupons = userCouponRepository.findByUserId(user.getId());
 
         List<ItsRctCouponResponse> couponResponses = userCoupons.stream()
                 .map(userCoupon -> new ItsRctCouponResponse(
-                      userCoupon.getCoupon().getId(),
+                        userCoupon.getCoupon().getId(),
                         userCoupon.getCoupon().getCode(),
                         userCoupon.getCoupon().getType(),
                         userCoupon.getCoupon().getStartDate(),
@@ -109,19 +127,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public APICustomize<List<ItsRctProductResponse>> wishListByUserId(Long id) {
+    public APICustomize<List<ItsRctProductResponse>> wishListByToken(String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id.toString()));
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
 
-        List<WishList> productsWishList = wishListRepository.findByUserId(id);
+        // Lấy danh sách sản phẩm trong wishlist của người dùng
+        List<WishList> productsWishList = wishListRepository.findByUserId(user.getId());
         List<ItsRctProductResponse> productResponses = new ArrayList<>();
 
         for (Product product : productsWishList.stream().map(WishList::getProduct).toList()) {
-
             // Tính lại giá trị trung bình của Rating
             BigDecimal rating = Optional.ofNullable(reviewRepository.findAverageStarsByProduct(product))
                     .orElse(BigDecimal.ZERO);
+
             // Lấy thông tin danh mục
             APICustomize<ItsRctCategoryResponse> categoryResponse = categoryService.category(product.getCategory().getId());
             // Lấy thông tin style
@@ -131,6 +157,7 @@ public class UserServiceImpl implements UserService {
             if (product.getDiscount() != null) {
                 discountResponse = discountService.discount(product.getDiscount().getId());
             }
+
             // Lấy danh sách available variant của sản phẩm
             APICustomize<List<ItsRctProductAvailableVariantResponse>> productAvailableVariants = productAvailableVariantService.productAvailableVariants(product.getId());
             // Lấy danh sách images của sản phẩm
@@ -161,12 +188,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public APICustomize<List<ItsRctAddressResponse>> getAddressesByUserId(Long userId) {
+    public APICustomize<List<ItsRctAddressResponse>> getAddressesByToken(String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId.toString()));
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
 
-        List<Address> addresses = addressRepository.findByUserId(userId);
+        // Lấy danh sách địa chỉ của người dùng
+        List<Address> addresses = addressRepository.findByUserId(user.getId());
 
         List<ItsRctAddressResponse> addressResponses = addresses.stream()
                 .map(address -> {
@@ -179,7 +214,7 @@ public class UserServiceImpl implements UserService {
                     response.setPhone(address.getPhone());
                     response.setStreetAddress(address.getStreetAddress());
                     response.setWardId(address.getWard().getId());
-                    response.setUserId(userId);
+                    response.setUserId(user.getId());
                     response.setCreatedAt(address.getCreatedAt());
                     response.setUpdatedAt(address.getUpdatedAt());
                     return response;

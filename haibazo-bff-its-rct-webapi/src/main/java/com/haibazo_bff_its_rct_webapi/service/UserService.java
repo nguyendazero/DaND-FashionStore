@@ -12,15 +12,15 @@ import com.haibazo_bff_its_rct_webapi.model.User;
 import java.util.List;
 
 public interface UserService {
-    public APICustomize<ItsRctUserResponse> getUserById(Long id);
+    public APICustomize<ItsRctUserResponse> getUserByToken(String authorizationHeader);
 
     public Long create(UserRequest request);
 
-    public APICustomize<List<ItsRctCouponResponse>> couponsByUserId(Long id);
+    public APICustomize<List<ItsRctCouponResponse>> couponsByToken(String authorizationHeader) ;
 
-    public APICustomize<List<ItsRctProductResponse>> wishListByUserId(Long id);
+    public APICustomize<List<ItsRctProductResponse>> wishListByToken(String authorizationHeader);
 
-    public APICustomize<List<ItsRctAddressResponse>> getAddressesByUserId(Long userId);
+    public APICustomize<List<ItsRctAddressResponse>> getAddressesByToken(String authorizationHeader);
 
     public APICustomize<String> delete(Long id);
 }

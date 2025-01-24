@@ -8,6 +8,7 @@ import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCouponResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctProductResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -24,20 +25,26 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/user/user/coupons")
-    public ResponseEntity<?> couponsByUserId(@RequestParam Long id){
-        APICustomize<List<ItsRctCouponResponse>> response = userService.couponsByUserId(id);
+    public ResponseEntity<?> couponsByUser(HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<List<ItsRctCouponResponse>> response = userService.couponsByToken(authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
     @GetMapping("/user/user/wishes")
-    public ResponseEntity<?> wishes(@RequestParam Long id){
-        APICustomize<List<ItsRctProductResponse>> response = userService.wishListByUserId(id);
+    public ResponseEntity<?> wishes(HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<List<ItsRctProductResponse>> response = userService.wishListByToken(authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
     @GetMapping("/user/user")
-    public ResponseEntity<?> user(@RequestParam Long id){
-        APICustomize<ItsRctUserResponse> response = userService.getUserById(id);
+    public ResponseEntity<?> user(HttpServletRequest httpRequest){
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<ItsRctUserResponse> response = userService.getUserByToken(authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
@@ -48,8 +55,10 @@ public class UserController {
     }
 
     @GetMapping("/user/user/addresses")
-    public ResponseEntity<?> addresses(@RequestParam Long id){
-        APICustomize<List<ItsRctAddressResponse>> response = userService.getAddressesByUserId(id);
+    public ResponseEntity<?> addresses(HttpServletRequest httpRequest){
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<List<ItsRctAddressResponse>> response = userService.getAddressesByToken(authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
