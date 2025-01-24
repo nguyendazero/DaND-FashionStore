@@ -63,8 +63,10 @@ public class UserController {
     }
 
     @DeleteMapping("/admin/user")
-    public ResponseEntity<?> delete(@RequestParam Long id){
-        APICustomize<String> response = userService.delete(id);
+    public ResponseEntity<?> delete(@RequestParam Long id, HttpServletRequest httpRequest){
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<String> response = userService.delete(id, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

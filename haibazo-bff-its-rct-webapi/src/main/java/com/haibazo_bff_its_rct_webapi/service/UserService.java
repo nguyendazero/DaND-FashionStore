@@ -22,5 +22,5 @@ public interface UserService {
 
     public APICustomize<List<ItsRctAddressResponse>> getAddressesByToken(String authorizationHeader);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 }

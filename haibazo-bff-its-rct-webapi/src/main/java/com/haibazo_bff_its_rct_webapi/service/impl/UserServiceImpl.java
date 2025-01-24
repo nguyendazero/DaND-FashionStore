@@ -6,6 +6,7 @@ import com.haibazo_bff_its_rct_webapi.dto.response.*;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.event.DeleteUserEvent;
+import com.haibazo_bff_its_rct_webapi.exception.ErrorDeleteUserException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.model.*;
@@ -225,17 +226,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public APICustomize<String> delete(Long id) {
+    public APICustomize<String> delete(Long id, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
 
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        ItsRctUserResponse currentUserResponse = webClient.get()
+                .uri("/api/bff/its-rct/v1/account/user/account/{id}", haizaoAccountId)
+                .retrieve()
+                .bodyToMono(ItsRctUserResponse.class)
+                .block();
+
+        // Kiểm tra thông tin người dùng hiện tại và quyền hạn
+        if (currentUserResponse == null || currentUserResponse.getUsername() == null ||
+                !("admin".equals(currentUserResponse.getUsername()) && currentUserResponse.getRole().contains("ROLE_ADMIN"))) {
+            throw new ErrorDeleteUserException();
+        }
+        
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id.toString()));
 
-        // Gửi sự kiện DeleteUserEvent đến Kafka
-        DeleteUserEvent deleteUserEvent = new DeleteUserEvent(user.getHaibazoAccountId());
-        kafkaTemplate.send("userDeletionTopic", deleteUserEvent);
-
+        // Gửi sự kiện DeleteUserEvent đến Kafka và xóa người dùng
+        kafkaTemplate.send("userDeletionTopic", new DeleteUserEvent(user.getHaibazoAccountId()));
         userRepository.delete(user);
-        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Successfully deleted user with id = " + id);
+
+        return new APICustomize<>(ApiError.NO_CONTENT.getCode(), ApiError.NO_CONTENT.getMessage(), "Successfully deleted user with id = " + id);
     }
 
 

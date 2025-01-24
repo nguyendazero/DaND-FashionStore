@@ -38,6 +38,30 @@ public class GlobalExceptionHandler {
         }
     }
 
+    @ExceptionHandler(ErrorDeleteUserException.class)
+    public ResponseEntity<ErrorResponse> handleErrorDeleteUserException(HttpServletRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.FORBIDDEN.value());
+        errorResponse.setTimestamp(LocalDateTime.now().toString());
+        errorResponse.setPath(request.getRequestURI());
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        String errorKey = "ERRORDELETEUSER";
+        String errorMessage = messages.getProperty(errorKey);
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode("403");
+        errorDetail.setErrorMessageId(errorKey);
+        errorDetail.setErrorMessage(errorMessage);
+
+        errors.add(errorDetail);
+        errorResponse.setErrors(errors);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(HttpServletRequest request) {
 
