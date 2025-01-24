@@ -4,7 +4,7 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddPostCommentRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctPostCommentResponse;
 import com.haibazo_bff_its_rct_webapi.service.PostCommentService;
-import jakarta.ws.rs.POST;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,9 +20,11 @@ public class PostCommentController {
 
     private final PostCommentService postCommentService;
 
-    @PostMapping("/admin/post-comment")
-    public ResponseEntity<?> create(@RequestParam Long postId, @RequestBody AddPostCommentRequest request) {
-        APICustomize<ItsRctPostCommentResponse> response = postCommentService.add(postId, request);
+    @PostMapping("/public/post-comment")
+    public ResponseEntity<?> create(@RequestParam Long postId, @RequestBody AddPostCommentRequest request, HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<ItsRctPostCommentResponse> response = postCommentService.add(postId, request, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
@@ -38,9 +40,11 @@ public class PostCommentController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    @DeleteMapping("/admin/post-comment")
-    public ResponseEntity<?> delete(@RequestParam Long id) {
-        APICustomize<String> response = postCommentService.delete(id);
+    @DeleteMapping("/user/post-comment")
+    public ResponseEntity<?> delete(@RequestParam Long id, HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<String> response = postCommentService.delete(id, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 }

@@ -8,12 +8,12 @@ import java.util.List;
 
 public interface PostCommentService {
 
-    public APICustomize<ItsRctPostCommentResponse> add(Long postId, AddPostCommentRequest request);
+    public APICustomize<ItsRctPostCommentResponse> add(Long postId, AddPostCommentRequest request, String authorizationHeader);
 
     public APICustomize<ItsRctPostCommentResponse> postComment(Long id);
 
     public APICustomize<List<ItsRctPostCommentResponse>> getByPostId(Long postId);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 
 }
