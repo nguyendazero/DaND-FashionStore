@@ -9,8 +9,8 @@ import java.util.List;
 
 public interface OrderService {
 
-    public APICustomize<ItsRctOrderResponse> create(AddOrderRequest request);
+    public APICustomize<ItsRctOrderResponse> create(AddOrderRequest request, String authorizationHeader);
 
-    public APICustomize<List<ItsRctOrderResponse>> getOrdersByUserId(Long userId);
+    public APICustomize<List<ItsRctOrderResponse>> getOrdersByToken(String authorizationHeader);
 
 }

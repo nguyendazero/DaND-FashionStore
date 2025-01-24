@@ -10,8 +10,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddOrderRequest {
-
-    private Long userId;
+    
     private String note;
     private Long addressId;
     private Long paymentId;

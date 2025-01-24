@@ -3,13 +3,16 @@ package com.haibazo_bff_its_rct_webapi.service.impl;
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddAddressRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctAddressResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
+import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.AddressRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserRepository;
 import com.haibazo_bff_its_rct_webapi.repository.WardRepository;
 import com.haibazo_bff_its_rct_webapi.service.AddressService;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,16 +27,27 @@ public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;
     private final WardRepository wardRepository;
     private final UserRepository userRepository;
+    private final TokenUtil tokenUtil;
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctAddressResponse> create(AddAddressRequest request) {
+    public APICustomize<ItsRctAddressResponse> create(AddAddressRequest request, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
+
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (userResponse == null) {
+            throw new UnauthorizedException();
+        }
+
+        User user = userRepository.findById(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
 
         Ward ward = wardRepository.findById(request.getWardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ward", "id", request.getWardId().toString()));
-
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getUserId().toString()));
 
         Address address = new Address();
         address.setDisplayName(request.getDisplayName());
@@ -66,10 +80,25 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctAddressResponse> update(Long id, AddAddressRequest request) {
+    public APICustomize<ItsRctAddressResponse> update(Long id, AddAddressRequest request, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
+
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (userResponse == null) {
+            throw new UnauthorizedException();
+        }
 
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Address", "id", id.toString()));
+
+        // Kiểm tra xem người dùng có quyền sửa địa chỉ không
+        if (!address.getUser().getId().equals(userResponse.getId())) {
+            throw new UnauthorizedException();
+        }
 
         Ward ward = wardRepository.findById(request.getWardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ward", "id", request.getWardId().toString()));
@@ -81,7 +110,6 @@ public class AddressServiceImpl implements AddressService {
         address.setEmail(request.getEmail());
         address.setPhone(request.getPhone());
         address.setUpdatedAt(LocalDateTime.now());
-        address.setUser(address.getUser());
         address.setWard(ward);
 
         Address savedAddress = addressRepository.save(address);
@@ -101,7 +129,6 @@ public class AddressServiceImpl implements AddressService {
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
-
     }
 
     @Override
@@ -158,10 +185,25 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<String> delete(Long id) {
+    public APICustomize<String> delete(Long id, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
+
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (userResponse == null) {
+            throw new UnauthorizedException();
+        }
 
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Address", "id", id.toString()));
+
+        // Kiểm tra xem người dùng có quyền xóa địa chỉ không
+        if (!address.getUser().getId().equals(userResponse.getId())) {
+            throw new UnauthorizedException();
+        }
 
         addressRepository.delete(address);
         return new APICustomize<>(ApiError.NO_CONTENT.getCode(), ApiError.NO_CONTENT.getMessage(), "Successfully deleted address with id = " + id);

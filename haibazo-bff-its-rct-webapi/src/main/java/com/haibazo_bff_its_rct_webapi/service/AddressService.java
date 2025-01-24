@@ -8,14 +8,14 @@ import java.util.List;
 
 public interface AddressService{
 
-    public APICustomize<ItsRctAddressResponse> create(AddAddressRequest request);
+    public APICustomize<ItsRctAddressResponse> create(AddAddressRequest request, String authorizationHeader);
 
-    public APICustomize<ItsRctAddressResponse> update(Long id, AddAddressRequest request);
+    public APICustomize<ItsRctAddressResponse> update(Long id, AddAddressRequest request, String authorizationHeader);
 
     public APICustomize<List<ItsRctAddressResponse>> addresses(Long wardId);
 
     public APICustomize<ItsRctAddressResponse> address(Long id);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 
 }

@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface OrderDetailService {
 
-    public APICustomize<List<ItsRctOrderDetailResponse>> orderDetails(Long orderId);
+    public APICustomize<List<ItsRctOrderDetailResponse>> orderDetails(Long orderId, String authorizationHeader);
 
 }
