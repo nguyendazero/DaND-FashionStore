@@ -2,11 +2,9 @@ package com.haibazo_bff_its_rct_webapi.controller;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddAnswerRequest;
-import com.haibazo_bff_its_rct_webapi.dto.request.AddQuestionRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctAnswerResponse;
-import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctQuestionResponse;
 import com.haibazo_bff_its_rct_webapi.service.AnswerService;
-import com.haibazo_bff_its_rct_webapi.service.QuestionService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,8 +21,10 @@ public class AnswerController {
     private final AnswerService answerService;
 
     @PostMapping("/admin/answer")
-    public ResponseEntity<?> create(@RequestParam Long questionId, @ModelAttribute AddAnswerRequest request) {
-        APICustomize<ItsRctAnswerResponse> response = answerService.add(questionId, request);
+    public ResponseEntity<?> create(@RequestParam Long questionId, @ModelAttribute AddAnswerRequest request, HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<ItsRctAnswerResponse> response = answerService.add(questionId, request, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
@@ -41,11 +41,11 @@ public class AnswerController {
     }
 
     @DeleteMapping("/admin/answer")
-    public ResponseEntity<?> delete(@RequestParam Long id) {
-        APICustomize<String> response = answerService.delete(id);
+    public ResponseEntity<?> delete(@RequestParam Long id, HttpServletRequest httpRequest) {
+        // Lấy header Authorization từ yêu cầu
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<String> response = answerService.delete(id, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
-
-
-
+    
 }

@@ -8,12 +8,12 @@ import java.util.List;
 
 public interface AnswerService {
 
-    public APICustomize<ItsRctAnswerResponse> add(Long questionId, AddAnswerRequest request);
+    public APICustomize<ItsRctAnswerResponse> add(Long questionId, AddAnswerRequest request, String authorizationHeader);
 
     public APICustomize<ItsRctAnswerResponse> getById(Long id);
 
     public APICustomize<List<ItsRctAnswerResponse>> getByQuestionId(Long questionId);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 
 }
