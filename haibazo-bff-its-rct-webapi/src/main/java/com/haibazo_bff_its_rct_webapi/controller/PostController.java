@@ -2,11 +2,8 @@ package com.haibazo_bff_its_rct_webapi.controller;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddPostRequest;
-import com.haibazo_bff_its_rct_webapi.dto.request.AddTagRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctPostResponse;
-import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctTagResponse;
 import com.haibazo_bff_its_rct_webapi.service.PostService;
-import com.haibazo_bff_its_rct_webapi.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -35,7 +32,7 @@ public class PostController {
     }
 
     @PostMapping("/admin/post")
-    public ResponseEntity<?> create(@RequestBody AddPostRequest request) {
+    public ResponseEntity<?> create(@ModelAttribute AddPostRequest request) {
         APICustomize<ItsRctPostResponse> response = postService.add(request);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }

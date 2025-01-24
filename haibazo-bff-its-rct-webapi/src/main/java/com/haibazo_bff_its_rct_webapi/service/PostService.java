@@ -15,7 +15,5 @@ public interface PostService {
     public APICustomize<List<ItsRctPostResponse>> posts();
 
     public APICustomize<String> delete(Long id);
-
-
-
+    
 }

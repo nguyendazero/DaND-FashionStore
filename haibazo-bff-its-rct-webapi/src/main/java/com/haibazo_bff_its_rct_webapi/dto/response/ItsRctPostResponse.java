@@ -13,6 +13,7 @@ public class ItsRctPostResponse {
     private Long id;
     private String name;
     private String content;
+    private String imageUrl;
     private ItsRctCategoryResponse category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

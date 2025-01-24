@@ -28,6 +28,9 @@ public class Post extends BaseEntity{
     @Column(name = "content", nullable = false)
     private String content;
 
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
