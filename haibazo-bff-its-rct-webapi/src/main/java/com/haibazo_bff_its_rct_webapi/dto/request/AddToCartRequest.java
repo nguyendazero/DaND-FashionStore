@@ -11,9 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddToCartRequest {
-
-    private Long userId;
     private Long productAvailableVariantId;
     private long quantity;
-
 }

@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface CartItemService {
 
-    public APICustomize<List<ItsRctCartResponse>> getCartItemByUserid(Long userId);
+    public APICustomize<List<ItsRctCartResponse>> getCartItems(String authorizationHeader);
 
-    public APICustomize<String> addToCart(AddToCartRequest request);
+    public APICustomize<String> addToCart(AddToCartRequest request, String authorizationHeader);
 
-    public APICustomize<String> removeFromCart(RemoveFromCartRequest request);
+    public APICustomize<String> removeFromCart(RemoveFromCartRequest request, String authorizationHeader);
 
 
 }

@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RemoveFromCartRequest {
-    private Long userId;
     private Long productAvailableVariantId;
 }

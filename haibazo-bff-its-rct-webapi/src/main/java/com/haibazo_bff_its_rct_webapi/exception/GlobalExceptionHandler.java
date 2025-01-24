@@ -38,6 +38,30 @@ public class GlobalExceptionHandler {
         }
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(HttpServletRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        errorResponse.setTimestamp(LocalDateTime.now().toString());
+        errorResponse.setPath(request.getRequestURI());
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        String errorKey = "UNAUTHORIZED401E";
+        String errorMessage = messages.getProperty(errorKey);
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode("401");
+        errorDetail.setErrorMessageId(errorKey);
+        errorDetail.setErrorMessage(errorMessage);
+
+        errors.add(errorDetail);
+        errorResponse.setErrors(errors);
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
     @ExceptionHandler(ErrorPermissionException.class)
     public ResponseEntity<ErrorResponse> handleErrorPermissionException(HttpServletRequest request) {
 

@@ -6,6 +6,7 @@ import com.haibazo_bff_its_rct_webapi.model.UserCoupon;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
@@ -13,5 +14,5 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     List<CartItem> findByUserId(Long userId);
 
-    CartItem findByUserIdAndProductAvailableVariantId(Long userId, Long productAvailableVariantId);
+    Optional<CartItem> findByUserIdAndProductAvailableVariantId(Long userId, Long productAvailableVariantId);
 }
