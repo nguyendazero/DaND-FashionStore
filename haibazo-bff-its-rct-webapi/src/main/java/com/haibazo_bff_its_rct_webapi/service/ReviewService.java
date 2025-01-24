@@ -13,8 +13,8 @@ public interface ReviewService {
 
     public APICustomize<ItsRctReviewResponse> review(Long reviewId);
 
-    public APICustomize<ItsRctReviewResponse> add(Long productId, AddReviewRequest request);
+    public APICustomize<ItsRctReviewResponse> add(Long productId, AddReviewRequest request, String authorizationHeader);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 
 }

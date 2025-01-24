@@ -4,8 +4,10 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddQuestionRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctImageResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctQuestionResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
+import com.haibazo_bff_its_rct_webapi.exception.ErrorPermissionException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.ImageRepository;
@@ -14,6 +16,7 @@ import com.haibazo_bff_its_rct_webapi.repository.QuestionRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.MinioService;
 import com.haibazo_bff_its_rct_webapi.service.QuestionService;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -36,30 +39,47 @@ public class QuestionServiceImpl implements QuestionService {
     private final String BUCKET_NAME = "questions";
     private final ImageRepository imageRepository;
     private final MinioService minioService;
+    private final TokenUtil tokenUtil;
 
     @SneakyThrows
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctQuestionResponse> add(Long productId, AddQuestionRequest request) {
+    public APICustomize<ItsRctQuestionResponse> add(Long productId, AddQuestionRequest request, String authorizationHeader) {
         // Tìm sản phẩm theo productId
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
 
-        // Tạo UserTemp và lưu vào cơ sở dữ liệu
-        UserTemp userTemp = new UserTemp();
-        userTemp.setFullName(request.getFullName());
-        userTemp.setEmail(request.getEmail());
-        userTemp.setAvatar(null);
-        userTempRepository.save(userTemp);
-
-        // Tạo Question và thiết lập các thuộc tính
         Question question = new Question();
         question.setContent(request.getContent());
         question.setProduct(product);
-        question.setUser(null);
-        question.setUserTemp(userTemp);
 
-        // Lưu question vào cơ sở dữ liệu trước
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = null;
+
+        if (token != null) {
+            // Giải mã token để lấy haibazoAccountId
+            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+
+            // Gọi account-service để lấy thông tin tài khoản
+            userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        }
+
+        // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
+        if (userResponse != null) {
+            question.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+        } else {
+            // Nếu chưa xác thực, tạo UserTemp
+            UserTemp userTemp = new UserTemp();
+            userTemp.setFullName(request.getFullName());
+            userTemp.setEmail(request.getEmail());
+            userTemp.setAvatar(null);
+            userTempRepository.save(userTemp);
+
+            question.setUserTemp(userTemp);
+        }
+
+        // Lưu question vào cơ sở dữ liệu
         Question savedQuestion = questionRepository.save(question);
 
         List<ItsRctImageResponse> imageResponses = new ArrayList<>();
@@ -70,7 +90,7 @@ public class QuestionServiceImpl implements QuestionService {
             if (image != null && !image.isEmpty()) {
                 try {
                     // Tạo tên ảnh duy nhất
-                    String imageName = request.getEmail().replace(" ", "_") + "_image_" + UUID.randomUUID().toString();
+                    String imageName = "question_image_" + UUID.randomUUID();
                     InputStream inputStream = image.getInputStream();
 
                     // Lưu ảnh vào MinIO
@@ -83,7 +103,7 @@ public class QuestionServiceImpl implements QuestionService {
                     Image imageEntity = new Image();
                     imageEntity.setImageUrl(imageUrl);
                     imageEntity.setEntityType(EntityType.QUESTION);
-                    imageEntity.setEntityId(savedQuestion.getId()); // Đặt entityId là ID của Question
+                    imageEntity.setEntityId(savedQuestion.getId());
 
                     // Lưu ảnh vào cơ sở dữ liệu
                     Image savedImage = imageRepository.save(imageEntity);
@@ -187,11 +207,30 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<String> delete(Long id) {
+    public APICustomize<String> delete(Long id, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = null;
 
+        if (token != null) {
+            // Giải mã token để lấy haibazoAccountId
+            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+            userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        }
+
+        // Tìm câu hỏi theo id
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Question", "id", id.toString()));
 
+        // Kiểm tra quyền hạn
+        boolean isAdmin = userResponse != null && userResponse.getRole().contains("ROLE_ADMIN");
+        boolean isOwner = userResponse != null && question.getUser() != null && question.getUser().getId().equals(userResponse.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new ErrorPermissionException();
+        }
+
+        // Tìm các hình ảnh liên quan đến câu hỏi
         List<Image> images = imageRepository.findByEntityIdAndEntityType(question.getId(), EntityType.QUESTION);
 
         // Xóa từng hình ảnh khỏi MinIO và cơ sở dữ liệu
@@ -200,6 +239,7 @@ public class QuestionServiceImpl implements QuestionService {
             minioService.deleteObject(BUCKET_NAME, imageName);
             imageRepository.delete(image);
         }
+
         // Xóa câu hỏi khỏi cơ sở dữ liệu
         questionRepository.delete(question);
 

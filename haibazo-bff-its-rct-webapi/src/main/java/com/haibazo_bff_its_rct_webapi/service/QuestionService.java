@@ -9,12 +9,12 @@ import java.util.List;
 
 public interface QuestionService {
 
-    public APICustomize<ItsRctQuestionResponse> add(Long productId, AddQuestionRequest request);
+    public APICustomize<ItsRctQuestionResponse> add(Long productId, AddQuestionRequest request,  String authorizationHeader);
 
     public APICustomize<List<ItsRctQuestionResponse>> questionsByProduct(Long productId);
 
     public APICustomize<ItsRctQuestionResponse> getById(Long id);
 
-    public APICustomize<String> delete(Long id);
+    public APICustomize<String> delete(Long id, String authorizationHeader);
 
 }

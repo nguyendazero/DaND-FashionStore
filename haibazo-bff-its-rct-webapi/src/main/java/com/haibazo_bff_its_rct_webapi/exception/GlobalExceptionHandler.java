@@ -38,6 +38,30 @@ public class GlobalExceptionHandler {
         }
     }
 
+    @ExceptionHandler(ErrorPermissionException.class)
+    public ResponseEntity<ErrorResponse> handleErrorPermissionException(HttpServletRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.FORBIDDEN.value());
+        errorResponse.setTimestamp(LocalDateTime.now().toString());
+        errorResponse.setPath(request.getRequestURI());
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        String errorKey = "ERRORPERMISSION";
+        String errorMessage = messages.getProperty(errorKey);
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode("403");
+        errorDetail.setErrorMessageId(errorKey);
+        errorDetail.setErrorMessage(errorMessage);
+
+        errors.add(errorDetail);
+        errorResponse.setErrors(errors);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
     @ExceptionHandler(MinSpendCouponException.class)
     public ResponseEntity<ErrorResponse> handleMinSpendCouponException(HttpServletRequest request, MinSpendCouponException ex) {
 

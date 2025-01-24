@@ -4,8 +4,10 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddReviewRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctImageResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctReviewResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
+import com.haibazo_bff_its_rct_webapi.exception.ErrorPermissionException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.ImageRepository;
@@ -15,6 +17,7 @@ import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.MinioService;
 import com.haibazo_bff_its_rct_webapi.service.RedisService;
 import com.haibazo_bff_its_rct_webapi.service.ReviewService;
+import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,6 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final String BUCKET_NAME = "reviews";
     private final ImageRepository imageRepository;
     private final MinioService minioService;
+    private final TokenUtil tokenUtil;
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
@@ -111,27 +115,43 @@ public class ReviewServiceImpl implements ReviewService {
     @SneakyThrows
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<ItsRctReviewResponse> add(Long productId, AddReviewRequest request) {
+    public APICustomize<ItsRctReviewResponse> add(Long productId, AddReviewRequest request, String authorizationHeader) {
         // Tìm sản phẩm theo productId
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
 
-        // Tạo UserTemp và lưu vào cơ sở dữ liệu
-        UserTemp userTemp = new UserTemp();
-        userTemp.setFullName(request.getFullName());
-        userTemp.setEmail(request.getEmail());
-        userTemp.setAvatar(null);
-        userTempRepository.save(userTemp);
-
-        // Tạo Review và thiết lập các thuộc tính
         Review review = new Review();
         review.setStars(request.getStars());
         review.setContent(request.getContent());
         review.setProduct(product);
-        review.setUser(null);
-        review.setUserTemp(userTemp);
 
-        // Lưu review vào cơ sở dữ liệu trước
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = null;
+
+        if (token != null) {
+            // Giải mã token để lấy haibazoAccountId
+            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+
+            // Gọi account-service để lấy thông tin tài khoản
+            userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        }
+
+        // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
+        if (userResponse != null) {
+            review.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+        } else {
+            // Nếu chưa xác thực, tạo UserTemp
+            UserTemp userTemp = new UserTemp();
+            userTemp.setFullName(request.getFullName());
+            userTemp.setEmail(request.getEmail());
+            userTemp.setAvatar(null);
+            userTempRepository.save(userTemp);
+
+            review.setUserTemp(userTemp);
+        }
+
+        // Lưu review vào cơ sở dữ liệu
         Review savedReview = reviewRepository.save(review);
 
         List<ItsRctImageResponse> imageResponses = new ArrayList<>();
@@ -142,7 +162,7 @@ public class ReviewServiceImpl implements ReviewService {
             if (image != null && !image.isEmpty()) {
                 try {
                     // Tạo tên ảnh duy nhất
-                    String imageName = request.getEmail().replace(" ", "_") + "_image_" + UUID.randomUUID().toString();
+                    String imageName = "review_image_" + UUID.randomUUID();
                     InputStream inputStream = image.getInputStream();
 
                     // Lưu ảnh vào MinIO
@@ -155,7 +175,7 @@ public class ReviewServiceImpl implements ReviewService {
                     Image imageEntity = new Image();
                     imageEntity.setImageUrl(imageUrl);
                     imageEntity.setEntityType(EntityType.REVIEW);
-                    imageEntity.setEntityId(savedReview.getId()); // Đặt entityId là ID của Review
+                    imageEntity.setEntityId(savedReview.getId());
 
                     // Lưu ảnh vào cơ sở dữ liệu
                     Image savedImage = imageRepository.save(imageEntity);
@@ -168,7 +188,6 @@ public class ReviewServiceImpl implements ReviewService {
                     imageResponse.setEntityId(savedImage.getEntityId());
                     imageResponses.add(imageResponse);
                 } catch (IOException e) {
-                    // Xử lý lỗi nếu có
                     throw new RuntimeException("Error while processing image: " + e.getMessage(), e);
                 }
             }
@@ -191,14 +210,29 @@ public class ReviewServiceImpl implements ReviewService {
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
     }
-
-
+    
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<String> delete(Long id) {
+    public APICustomize<String> delete(Long id, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = null;
+
+        if (token != null) {
+            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+            userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        }
 
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Review", "id", id.toString()));
+
+        // Kiểm tra quyền hạn
+        boolean isAdmin = userResponse != null && userResponse.getRole().contains("ROLE_ADMIN");
+        boolean isOwner = userResponse != null && review.getUser() != null && review.getUser().getId().equals(userResponse.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new ErrorPermissionException();
+        }
 
         List<Image> images = imageRepository.findByEntityIdAndEntityType(review.getId(), EntityType.REVIEW);
 
@@ -208,6 +242,7 @@ public class ReviewServiceImpl implements ReviewService {
             minioService.deleteObject(BUCKET_NAME, imageName);
             imageRepository.delete(image);
         }
+
         // Xóa review khỏi cơ sở dữ liệu
         reviewRepository.delete(review);
 
