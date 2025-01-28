@@ -13,8 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddReviewRequest {
-    private String fullName;
-    private String email;
     private String content;
     private BigDecimal stars;
     private List<MultipartFile> images = new ArrayList<>();

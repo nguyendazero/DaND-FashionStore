@@ -38,6 +38,30 @@ public class GlobalExceptionHandler {
         }
     }
 
+    @ExceptionHandler(ErrorReviewProductException.class)
+    public ResponseEntity<ErrorResponse> handleErrorReviewProductException(HttpServletRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        errorResponse.setTimestamp(LocalDateTime.now().toString());
+        errorResponse.setPath(request.getRequestURI());
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        String errorKey = "ERRORREVIEWPRODUCT";
+        String errorMessage = messages.getProperty(errorKey);
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode("400");
+        errorDetail.setErrorMessageId(errorKey);
+        errorDetail.setErrorMessage(errorMessage);
+
+        errors.add(errorDetail);
+        errorResponse.setErrors(errors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
     @ExceptionHandler(ErrorDeleteUserException.class)
     public ResponseEntity<ErrorResponse> handleErrorDeleteUserException(HttpServletRequest request) {
 

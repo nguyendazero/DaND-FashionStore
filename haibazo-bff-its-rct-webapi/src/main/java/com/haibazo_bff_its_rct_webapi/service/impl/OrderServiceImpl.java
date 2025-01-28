@@ -181,4 +181,9 @@ public class OrderServiceImpl implements OrderService {
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), responses);
     }
+
+    @Override
+    public boolean hasUserPurchasedProduct(Long userId, Long productId) {
+        return orderRepository.existsByUserIdAndProductId(userId, productId);
+    }
 }

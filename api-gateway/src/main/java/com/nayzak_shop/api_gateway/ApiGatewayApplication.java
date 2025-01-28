@@ -18,6 +18,5 @@ public class ApiGatewayApplication {
     @LoadBalanced
     public RestTemplate getRestTemplate() {
         return new RestTemplate();
-
     }
 }

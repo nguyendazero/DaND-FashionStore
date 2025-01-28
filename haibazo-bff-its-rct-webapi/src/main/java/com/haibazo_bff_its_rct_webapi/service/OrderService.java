@@ -13,4 +13,5 @@ public interface OrderService {
 
     public APICustomize<List<ItsRctOrderResponse>> getOrdersByToken(String authorizationHeader);
 
+    public boolean hasUserPurchasedProduct(Long userId, Long productId);
 }

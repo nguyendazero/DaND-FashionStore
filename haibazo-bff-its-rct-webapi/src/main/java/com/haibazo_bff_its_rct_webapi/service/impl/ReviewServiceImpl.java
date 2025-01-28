@@ -8,13 +8,16 @@ import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.exception.ErrorPermissionException;
+import com.haibazo_bff_its_rct_webapi.exception.ErrorReviewProductException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
+import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.ImageRepository;
 import com.haibazo_bff_its_rct_webapi.repository.ProductRepository;
 import com.haibazo_bff_its_rct_webapi.repository.ReviewRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.MinioService;
+import com.haibazo_bff_its_rct_webapi.service.OrderService;
 import com.haibazo_bff_its_rct_webapi.service.RedisService;
 import com.haibazo_bff_its_rct_webapi.service.ReviewService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
@@ -42,6 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ImageRepository imageRepository;
     private final MinioService minioService;
     private final TokenUtil tokenUtil;
+    private final OrderService orderService;
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
@@ -70,7 +74,6 @@ public class ReviewServiceImpl implements ReviewService {
                             review.getStars(),
                             imageResponses,
                             review.getUser(),
-                            review.getUserTemp(),
                             review.getCreatedAt(),
                             review.getUpdatedAt()
                     );
@@ -104,7 +107,6 @@ public class ReviewServiceImpl implements ReviewService {
                 review.getStars(),
                 imageResponses,
                 review.getUser(),
-                review.getUserTemp(),
                 review.getCreatedAt(),
                 review.getUpdatedAt()
         );
@@ -120,14 +122,9 @@ public class ReviewServiceImpl implements ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId.toString()));
 
-        Review review = new Review();
-        review.setStars(request.getStars());
-        review.setContent(request.getContent());
-        review.setProduct(product);
-
         // Lấy JWT từ header
         String token = tokenUtil.extractToken(authorizationHeader);
-        ItsRctUserResponse userResponse = null;
+        ItsRctUserResponse userResponse;
 
         if (token != null) {
             // Giải mã token để lấy haibazoAccountId
@@ -135,29 +132,30 @@ public class ReviewServiceImpl implements ReviewService {
 
             // Gọi account-service để lấy thông tin tài khoản
             userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
-        }
 
-        // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
-        if (userResponse != null) {
-            review.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+            // Kiểm tra xem người dùng đã mua sản phẩm chưa
+            boolean hasPurchased = orderService.hasUserPurchasedProduct(userResponse.getId(), productId);
+            if (!hasPurchased) {
+                throw new ErrorReviewProductException(); // Người dùng chưa mua sản phẩm
+            }
         } else {
-            // Nếu chưa xác thực, tạo UserTemp
-            UserTemp userTemp = new UserTemp();
-            userTemp.setFullName(request.getFullName());
-            userTemp.setEmail(request.getEmail());
-            userTemp.setAvatar(null);
-            userTempRepository.save(userTemp);
-
-            review.setUserTemp(userTemp);
+            throw new UnauthorizedException(); // Người dùng chưa đăng nhập
         }
+
+        // Tạo review
+        Review review = new Review();
+        review.setStars(request.getStars());
+        review.setContent(request.getContent());
+        review.setProduct(product);
+        review.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
 
         // Lưu review vào cơ sở dữ liệu
         Review savedReview = reviewRepository.save(review);
 
+        // Xử lý hình ảnh
         List<ItsRctImageResponse> imageResponses = new ArrayList<>();
         List<MultipartFile> imageFiles = request.getImages();
 
-        // Xử lý danh sách ảnh
         for (MultipartFile image : imageFiles) {
             if (image != null && !image.isEmpty()) {
                 try {
@@ -203,7 +201,6 @@ public class ReviewServiceImpl implements ReviewService {
                 savedReview.getStars(),
                 imageResponses,
                 savedReview.getUser(),
-                savedReview.getUserTemp(),
                 savedReview.getCreatedAt(),
                 savedReview.getUpdatedAt()
         );

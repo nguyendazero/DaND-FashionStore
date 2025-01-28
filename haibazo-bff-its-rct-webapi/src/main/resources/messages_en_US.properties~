@@ -12,6 +12,6 @@ RESOURCEALREADYEXISTS={0} is already exists with the given input data {1}: {2}
 ERRORPERMISSION=You do not have permission
 UNAUTHORIZED401E=You are not logged in
 ERRORDELETEUSER=Only super admin can delete user
-ERRORREVIEWPRODUCT=Cannot add review for this product, you have not purchased this product
+ERRORREVIEWPRODUCT=Cannot add review for this product
 validation.annotation.CanNotNegative.message=Cannot be less than 0
 validation.annotation.NoSpecialCharacters.message=Cannot contain special characters

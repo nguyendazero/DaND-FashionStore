@@ -19,7 +19,6 @@ public class ItsRctReviewResponse {
     private BigDecimal stars;
     private List<ItsRctImageResponse> images;
     private User user;
-    private UserTemp userTemp;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
