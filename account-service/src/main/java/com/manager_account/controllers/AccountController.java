@@ -42,6 +42,12 @@ public class AccountController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
+    @PostMapping("/public/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String email, @RequestParam String code) {
+        APICustomize<ItsRctUserResponse> response = accountService.verifyEmail(email, code);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
     @PostMapping("/public/sign-in")
     public ResponseEntity<?> signIn(@RequestBody SignInRequest request) {
         APICustomize<SignInResponse> response = accountService.signIn(request);

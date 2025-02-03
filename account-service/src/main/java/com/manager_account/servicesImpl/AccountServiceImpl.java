@@ -7,6 +7,7 @@ import com.manager_account.dto.request.UserRequest;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
+import com.manager_account.dto.response.VerificationInfo;
 import com.manager_account.entities.Account;
 import com.manager_account.enums.ApiError;
 import com.manager_account.exceptions.*;
@@ -16,6 +17,9 @@ import com.manager_account.services.AccountService;
 import com.manager_account.utils.TokenUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,17 +29,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
+    private final JavaMailSender javaMailSender;
     private final AccountRepository accountRepository;
     private final WebClient.Builder webClientBuilder; // Khai báo WebClient.Builder
     private WebClient webClient; // Khai báo WebClient
+    private final Map<String, VerificationInfo> verificationMap = new HashMap<>();
 
     //Security
     private final AuthenticationManager authenticationManager;
@@ -66,6 +76,24 @@ public class AccountServiceImpl implements AccountService {
             throw new ResourceAlreadyExistsException("Account", "username", request.getUsername());
         }
 
+        // Tạo mã xác thực
+        String verificationCode = String.format("%06d", new Random().nextInt(999999));
+        LocalDateTime sentTime = LocalDateTime.now();
+
+        // Lưu thông tin tạm thời
+        verificationMap.put(request.getEmail(), new VerificationInfo(verificationCode, sentTime, request.getUsername(), request.getName()));
+
+        // Gửi email xác thực
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(request.getEmail());
+            message.setSubject("Xác thực tài khoản");
+            message.setText("Mã xác thực của bạn là: " + verificationCode + "\nMã xác thực có hiệu lực trong 60 giây.");
+            javaMailSender.send(message);
+        } catch (MailException e) {
+            throw new RuntimeException("Gửi email xác thực thất bại. Vui lòng thử lại!", e);
+        }
+
         // Tạo tài khoản mới
         Account newAccount = new Account();
         newAccount.setUsername(request.getUsername());
@@ -76,7 +104,7 @@ public class AccountServiceImpl implements AccountService {
 
         newAccount.setFullName(request.getName());
         newAccount.setEmail(request.getEmail());
-        newAccount.setEnabled(true);
+        newAccount.setEnabled(false); // Đặt trạng thái ban đầu là chưa kích hoạt
         newAccount.setRole("ROLE_USER");
         newAccount.setCreatedAt(LocalDateTime.now());
         newAccount.setUpdatedAt(LocalDateTime.now());
@@ -86,7 +114,7 @@ public class AccountServiceImpl implements AccountService {
         savedAccount.setHaibazoAccountId(savedAccount.getId());
         accountRepository.save(savedAccount);
 
-        // Tạo đối tượng User và gửi yêu cầu tạo người dùng
+        // Tạo đối tượng UserRequest và gửi yêu cầu tạo người dùng
         UserRequest user = new UserRequest(savedAccount.getHaibazoAccountId());
         Long userId = webClient.post()
                 .uri("/api/bff/its-rct/v1/ecommerce/public/user/create")
@@ -98,6 +126,7 @@ public class AccountServiceImpl implements AccountService {
         // Kiểm tra xem userId có null không
         if (userId == null) throw new ResourceNotFoundException("User", "id", "User ID is null");
 
+        // Tạo đối tượng UserResponse
         ItsRctUserResponse userResponse = new ItsRctUserResponse(
                 userId,
                 savedAccount.getUsername(),
@@ -112,7 +141,55 @@ public class AccountServiceImpl implements AccountService {
                 savedAccount.getUpdatedAt()
         );
 
-        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), userResponse);
+        return new APICustomize<>(ApiError.CREATED.getCode(), "Đã gửi mã xác thực. Vui lòng xác thực để kích hoạt tài khoản.", userResponse);
+    }
+
+    @Override
+    public APICustomize<ItsRctUserResponse> verifyEmail(String email, String code) {
+        VerificationInfo verificationInfo = verificationMap.get(email);
+        if (verificationInfo == null) {
+            return new APICustomize<>("400", "Không tìm thấy thông tin xác thực cho email này.", null);
+        }
+
+        // Kiểm tra mã xác thực
+        if (!verificationInfo.getVerificationCode().equals(code)) {
+            return new APICustomize<>("400", "Mã xác thực không chính xác", null);
+        }
+
+        // Kiểm tra thời gian hết hạn
+        if (Duration.between(verificationInfo.getSentTime(), LocalDateTime.now()).getSeconds() > 60) {
+            return new APICustomize<>("400", "Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.", null);
+        }
+
+        // Cập nhật tài khoản đã tạo trước đó
+        Account existingAccount = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "email", email));
+
+        // Kích hoạt tài khoản
+        existingAccount.setEnabled(true);
+        existingAccount.setUpdatedAt(LocalDateTime.now());
+
+        // Lưu tài khoản
+        accountRepository.save(existingAccount);
+
+        // Tạo đối tượng UserResponse
+        ItsRctUserResponse userResponse = new ItsRctUserResponse(
+                existingAccount.getId(),
+                existingAccount.getUsername(),
+                existingAccount.getEmail(),
+                existingAccount.getFullName(),
+                existingAccount.getHaibazoAccountId(),
+                existingAccount.isEnabled(),
+                existingAccount.getRole(),
+                null, // status
+                null, // avatar
+                existingAccount.getCreatedAt(),
+                existingAccount.getUpdatedAt()
+        );
+
+        // Xóa thông tin xác thực sau khi xác thực thành công
+        verificationMap.remove(email);
+        return new APICustomize<>("200", "Xác thực email thành công!", userResponse);
     }
 
     @Override

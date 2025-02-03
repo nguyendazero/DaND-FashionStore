@@ -14,6 +14,8 @@ public interface AccountService {
 
     public APICustomize<ItsRctUserResponse> signUp(SignUpRequest request);
 
+    public APICustomize<ItsRctUserResponse> verifyEmail(String email, String code);
+
     public APICustomize<SignInResponse> signIn(SignInRequest request);
 
     public APICustomize<String> changeRole(Long id, String authorizationHeader);
