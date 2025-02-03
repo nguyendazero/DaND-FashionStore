@@ -56,4 +56,11 @@ public class AccountController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
+    @PutMapping("/admin/account/toggle-account-status")
+    public ResponseEntity<?> toggleAccountStatus(@RequestParam Long id, HttpServletRequest httpRequest) {
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<String> response = accountService.toggleAccountStatus(id, authorizationHeader);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
 }

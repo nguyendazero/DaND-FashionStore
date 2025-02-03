@@ -8,10 +8,7 @@ import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
 import com.manager_account.enums.ApiError;
-import com.manager_account.exceptions.ErrorPermissionException;
-import com.manager_account.exceptions.ErrorSignInException;
-import com.manager_account.exceptions.ResourceAlreadyExistsException;
-import com.manager_account.exceptions.ResourceNotFoundException;
+import com.manager_account.exceptions.*;
 import com.manager_account.repositories.AccountRepository;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
@@ -119,62 +116,63 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public APICustomize<SignInResponse> signIn(SignInRequest request) {
-        try {
-            // Tìm kiếm tài khoản bằng username hoặc email
-            Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
-                    .orElseGet(() -> accountRepository.findByEmail(request.getUsernameOrEmail())
-                            .orElseThrow(ErrorSignInException::new));
+        // Tìm kiếm tài khoản bằng username hoặc email
+        Account account = accountRepository.findByUsername(request.getUsernameOrEmail())
+                .orElseGet(() -> accountRepository.findByEmail(request.getUsernameOrEmail())
+                        .orElseThrow(ErrorSignInException::new));
 
-            // Kiểm tra mật khẩu
-            if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
-                throw new ErrorSignInException();
-            }
+        // Kiểm tra xem tài khoản có bị block không
+        if (!account.isEnabled()) {
+            throw new AccountIsBlockException();
+        }
 
-            // Xác thực tài khoản
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(account.getUsername(), request.getPassword())
-            );
-
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-            // Lấy danh sách roles từ authorities
-            List<String> roles = userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
-            // Tạo JWT token mới
-            String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
-
-            // Kiểm tra refresh token
-            String currentRefreshToken = account.getRefreshToken();
-            LocalDateTime refreshExpiresAt = account.getRefreshExpiresAt();
-
-            // Kiểm tra nếu refresh token là null hoặc đã hết hạn
-            if (currentRefreshToken == null || (refreshExpiresAt != null && LocalDateTime.now().isAfter(refreshExpiresAt))) {
-                // Tạo refresh token mới
-                String refreshToken = jwtUtils.generateRefreshTokenFromUserDetails(userDetails);
-                account.setRefreshToken(refreshToken);
-                // Cập nhật thời gian hết hạn cho refresh token mới
-                account.setRefreshExpiresAt(LocalDateTime.now().plusDays(30)); // 30 ngày
-            }
-
-            accountRepository.save(account); // Cập nhật tài khoản
-
-            // Tạo response với đầy đủ các trường cần thiết
-            SignInResponse response = new SignInResponse(
-                    account.getId(),
-                    account.getUsername(),
-                    account.getFullName(),
-                    account.getEmail(),
-                    roles,
-                    jwtToken,
-                    account.getRefreshToken()
-            );
-
-            return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
-        } catch (Exception e) {
+        // Kiểm tra mật khẩu
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
             throw new ErrorSignInException();
         }
+
+        // Xác thực tài khoản
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(account.getUsername(), request.getPassword())
+        );
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        // Lấy danh sách roles từ authorities
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        // Tạo JWT token mới
+        String jwtToken = jwtUtils.generateTokenFromUserDetails(userDetails);
+
+        // Kiểm tra refresh token
+        String currentRefreshToken = account.getRefreshToken();
+        LocalDateTime refreshExpiresAt = account.getRefreshExpiresAt();
+
+        // Kiểm tra nếu refresh token là null hoặc đã hết hạn
+        if (currentRefreshToken == null || (refreshExpiresAt != null && LocalDateTime.now().isAfter(refreshExpiresAt))) {
+            // Tạo refresh token mới
+            String refreshToken = jwtUtils.generateRefreshTokenFromUserDetails(userDetails);
+            account.setRefreshToken(refreshToken);
+            // Cập nhật thời gian hết hạn cho refresh token mới
+            account.setRefreshExpiresAt(LocalDateTime.now().plusDays(30)); // 30 ngày
+        }
+
+        accountRepository.save(account); // Cập nhật tài khoản
+
+        // Tạo response với đầy đủ các trường cần thiết
+        SignInResponse response = new SignInResponse(
+                account.getId(),
+                account.getUsername(),
+                account.getFullName(),
+                account.getEmail(),
+                roles,
+                jwtToken,
+                account.getRefreshToken()
+        );
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
     }
 
     @Override
@@ -193,6 +191,26 @@ public class AccountServiceImpl implements AccountService {
         accountToUpdate.setRole(newRole);
         accountRepository.save(accountToUpdate);
 
-        return new APICustomize<>(ApiError.OK.getCode(), "Role changed successfully", "New role: " + newRole);
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "New role: " + newRole);
+    }
+
+    @Override
+    public APICustomize<String> toggleAccountStatus(Long id, String authorizationHeader) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userCurrent = tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token));
+        
+        if (!userCurrent.getRole().equals("ROLE_ADMIN") || !userCurrent.getUsername().equals("admin")) {
+            throw new ErrorPermissionException();
+        }
+        
+        Account accountToUpdate = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id.toString()));
+        
+        accountToUpdate.setEnabled(!accountToUpdate.isEnabled());
+        accountRepository.save(accountToUpdate);
+
+        String statusMessage = accountToUpdate.isEnabled() ? "unblocked" : "blocked";
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Account has been " + statusMessage);
     }
 }
