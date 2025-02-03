@@ -5,12 +5,14 @@ import com.haibazo_bff_its_rct_webapi.dto.request.AddLanguageRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctLanguageResponse;
 import com.haibazo_bff_its_rct_webapi.exception.GlobalExceptionHandler;
 import com.haibazo_bff_its_rct_webapi.service.LanguageService;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +26,13 @@ public class LanguageController {
 
     private final LanguageService languageService;
     private final GlobalExceptionHandler globalExceptionHandler;
+    private final WebClient.Builder webClientBuilder;
+    private WebClient webClient;
+
+    @PostConstruct // Khởi tạo WebClient khi bean được tạo
+    public void init() {
+        this.webClient = webClientBuilder.baseUrl("http://localhost:8386").build();
+    }
 
     @GetMapping("/public/language/languages")
     public ResponseEntity<?> languages() {
@@ -62,6 +71,13 @@ public class LanguageController {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream(fileName)) {
             if (input == null) throw new IOException("File not found: " + fileName);
             globalExceptionHandler.loadMessages(input);
+            
+            webClient.get()
+                    .uri("/api/bff/its-rct/v1/account/public/language/choose-language?code={code}", code)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(); // Chờ đến khi có phản hồi
+
             return ResponseEntity.ok("Language set to: " + code);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

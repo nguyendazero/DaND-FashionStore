@@ -22,9 +22,13 @@ public class GlobalExceptionHandler {
     private final Properties messages;
     private final String host = "account-service";
 
+    public void loadMessages(InputStream input) throws IOException {
+        messages.load(input);
+    }
+
     public GlobalExceptionHandler() throws IOException {
         messages = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages_en_US.properties")) {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages_vn_VN.properties")) {
             if (input != null) {
                 messages.load(input);
             } else {

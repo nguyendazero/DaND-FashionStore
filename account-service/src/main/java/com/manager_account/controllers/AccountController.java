@@ -6,14 +6,18 @@ import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
+import com.manager_account.exceptions.GlobalExceptionHandler;
 import com.manager_account.security.AccessTokenResponse;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 @RestController
@@ -23,6 +27,7 @@ public class AccountController {
 
     private final AccountService accountService;
     private final JwtUtils jwtUtils;
+    private final GlobalExceptionHandler globalExceptionHandler;
 
     @GetMapping("/user/account/{id}")
     public ResponseEntity<?> getAccountById(@PathVariable Long id) {
@@ -61,6 +66,25 @@ public class AccountController {
         String authorizationHeader = httpRequest.getHeader("Authorization");
         APICustomize<String> response = accountService.toggleAccountStatus(id, authorizationHeader);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+    @GetMapping("/public/language/choose-language")
+    public ResponseEntity<String> chooseLanguage(@RequestParam String code) {
+        String fileName = switch (code) {
+            case "vn" -> "messages_vn_VN.properties";
+            case "us" -> "messages_en_US.properties";
+            default -> null;
+        };
+
+        if (fileName == null) return ResponseEntity.badRequest().body("Invalid language code: " + code);
+
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream(fileName)) {
+            if (input == null) throw new IOException("File not found: " + fileName);
+            globalExceptionHandler.loadMessages(input);
+            return ResponseEntity.ok("Language set to: " + code);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
 }
