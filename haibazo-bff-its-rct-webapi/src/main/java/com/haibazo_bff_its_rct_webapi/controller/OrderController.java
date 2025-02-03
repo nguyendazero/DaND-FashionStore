@@ -3,6 +3,7 @@ package com.haibazo_bff_its_rct_webapi.controller;
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddOrderRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctOrderResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.OrderStatisticsResponse;
 import com.haibazo_bff_its_rct_webapi.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,15 @@ public class OrderController {
         // Lấy header Authorization từ yêu cầu
         String authorizationHeader = httpRequest.getHeader("Authorization");
         APICustomize<List<ItsRctOrderResponse>> response = orderService.getOrdersByToken(authorizationHeader);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+    @GetMapping("/admin/order/statistics")
+    public ResponseEntity<?> getOrderStatistics(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam(required = false) Integer month,
+            @RequestParam int year) {
+        APICustomize<OrderStatisticsResponse> response = orderService.getOrderStatisticsByMonthAndYear(authorizationHeader, month, year);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

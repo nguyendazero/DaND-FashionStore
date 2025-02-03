@@ -4,6 +4,7 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddOrderRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctOrderResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.OrderStatisticsResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.enums.OrderStatus;
 import com.haibazo_bff_its_rct_webapi.exception.*;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.Year;
 import java.util.List;
 
 @Service
@@ -185,5 +188,49 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean hasUserPurchasedProduct(Long userId, Long productId) {
         return orderRepository.existsByUserIdAndProductId(userId, productId);
+    }
+
+    @Override
+    public APICustomize<OrderStatisticsResponse> getOrderStatisticsByMonthAndYear(String authorizationHeader, Integer month, int year) {
+        // Lấy JWT từ header và kiểm tra người dùng
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
+
+        if (userResponse == null || !userResponse.getRole().equals("ROLE_ADMIN")) {
+            throw new ErrorPermissionException();
+        }
+
+        // Nếu month không được cung cấp, thống kê theo tất cả các tháng trong năm
+        if (month == null) {
+            LocalDateTime startDate = LocalDateTime.of(year, 1, 1, 0, 0);
+            LocalDateTime endDate = LocalDateTime.of(year + 1, 1, 1, 0, 0).minusSeconds(1);
+
+            // Thống kê đơn hàng theo năm
+            List<Order> orders = orderRepository.findByCreatedAtBetween(startDate, endDate);
+            int totalOrders = orders.size();
+            BigDecimal totalRevenue = orders.stream()
+                    .map(Order::getTotalPrice)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            OrderStatisticsResponse statistics = new OrderStatisticsResponse(0, year, totalOrders, totalRevenue); // month = 0 để chỉ ra là thống kê theo năm
+            return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), statistics);
+        } else {
+            // Xác định ngày bắt đầu và kết thúc cho tháng và năm đã cho
+            LocalDateTime startDate = LocalDateTime.of(year, month, 1, 0, 0);
+            LocalDateTime endDate = LocalDateTime.of(year, month,
+                    Month.of(month).length(Year.isLeap(year)), 23, 59, 59); // Ngày cuối cùng của tháng
+
+            // Thống kê đơn hàng theo tháng và năm
+            List<Order> orders = orderRepository.findByCreatedAtBetween(startDate, endDate);
+            int totalOrders = orders.size();
+            BigDecimal totalRevenue = orders.stream()
+                    .map(Order::getTotalPrice)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            OrderStatisticsResponse statistics = new OrderStatisticsResponse(month, year, totalOrders, totalRevenue);
+            return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), statistics);
+        }
     }
 }

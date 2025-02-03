@@ -269,7 +269,7 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedException();
         }
 
-        // Lấy ID người dùng từ token
+        // Lấy người dùng từ token
         Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
         User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
