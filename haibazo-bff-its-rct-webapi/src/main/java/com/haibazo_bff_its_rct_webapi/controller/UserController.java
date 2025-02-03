@@ -74,7 +74,7 @@ public class UserController {
     @PutMapping("/user/update-info")
     public ResponseEntity<?> updateUserInfo(
             @RequestHeader("Authorization") String authorizationHeader,
-            @RequestBody UpdateInfoRequest request) {
+            @ModelAttribute UpdateInfoRequest request) {
         APICustomize<ItsRctUserResponse> response = userService.updateUserInfo(authorizationHeader, request);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }

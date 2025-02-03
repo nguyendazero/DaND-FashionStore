@@ -1,6 +1,7 @@
 package com.haibazo_bff_its_rct_webapi.service.impl;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
+import com.haibazo_bff_its_rct_webapi.dto.request.UpdateAccountRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.UpdateInfoRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.UserRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.*;
@@ -22,6 +23,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,8 @@ public class UserServiceImpl implements UserService {
     private final ProductAvailableVariantService productAvailableVariantService;
     private final StyleService styleService;
     private final TokenUtil tokenUtil;
-
+    private final MinioServiceImpl minioService;
+    private final String BUCKET_NAME = "users";
 
     //Kafka
     private final KafkaTemplate<String, DeleteUserEvent> kafkaTemplate;
@@ -271,10 +274,31 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
 
+        String avatarUrl = null;
+
+        // Lưu avatar vào MinIO nếu có
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            try {
+                String avatarName = "avatar_" + user.getId() + "_" + System.currentTimeMillis();
+                InputStream inputStream = request.getAvatar().getInputStream();
+                // Lưu avatar vào MinIO
+                minioService.putObject(BUCKET_NAME, avatarName, inputStream, request.getAvatar().getContentType());
+                avatarUrl = "/api/bff/its-rct/v1/ecommerce/public/image/" + BUCKET_NAME + "/" + avatarName;
+            } catch (Exception e) {
+                throw new RuntimeException("Error while uploading avatar: " + e.getMessage(), e);
+            }
+        }
+
+        // Tạo đối tượng UpdateInfoRequest với avatarUrl
+        UpdateAccountRequest updateAccountRequest = new UpdateAccountRequest();
+        updateAccountRequest.setAvatar(avatarUrl);
+        updateAccountRequest.setFullName(request.getFullName());
+        updateAccountRequest.setStatus(request.getStatus());
+
         // Gọi account-service để cập nhật thông tin tài khoản
         ItsRctUserResponse updatedUserResponse = webClient.put()
                 .uri("/api/bff/its-rct/v1/account/user/account/update/{haibazoAccountId}", haizaoAccountId)
-                .bodyValue(request)
+                .bodyValue(updateAccountRequest) // Gửi đối tượng đã cập nhật
                 .retrieve()
                 .bodyToMono(ItsRctUserResponse.class)
                 .block(); // Chờ cho phản hồi

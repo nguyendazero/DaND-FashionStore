@@ -223,7 +223,7 @@ public class AccountServiceImpl implements AccountService {
 
         // Cập nhật thông tin tài khoản
         if (request.getAvatar() != null) {
-            account.setAvatar(request.getAvatar()); // Lưu URL của avatar vào database
+            account.setAvatar(request.getAvatar());
         }
         if (request.getFullName() != null) {
             account.setFullName(request.getFullName());
