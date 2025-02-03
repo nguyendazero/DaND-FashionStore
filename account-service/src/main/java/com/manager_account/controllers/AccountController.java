@@ -2,6 +2,7 @@ package com.manager_account.controllers;
 
 import com.manager_account.dto.request.SignInRequest;
 import com.manager_account.dto.request.SignUpRequest;
+import com.manager_account.dto.request.UpdateInfoRequest;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
@@ -68,8 +69,16 @@ public class AccountController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
+    @PutMapping("/user/account/update/{haibazoAccountId}")
+    public ResponseEntity<?> updateAccount(
+            @PathVariable Long haibazoAccountId,
+            @RequestBody UpdateInfoRequest request) {
+        APICustomize<String> response = accountService.updateAccount(haibazoAccountId, request);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
     @GetMapping("/public/language/choose-language")
-    public ResponseEntity<String> chooseLanguage(@RequestParam String code) {
+    public ResponseEntity<?> chooseLanguage(@RequestParam String code) {
         String fileName = switch (code) {
             case "vn" -> "messages_vn_VN.properties";
             case "us" -> "messages_en_US.properties";

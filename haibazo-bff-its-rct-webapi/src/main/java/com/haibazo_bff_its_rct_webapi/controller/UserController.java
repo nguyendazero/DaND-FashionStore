@@ -2,6 +2,7 @@ package com.haibazo_bff_its_rct_webapi.controller;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddUserRequest;
+import com.haibazo_bff_its_rct_webapi.dto.request.UpdateInfoRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.UserRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctAddressResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCouponResponse;
@@ -67,6 +68,14 @@ public class UserController {
         // Lấy header Authorization từ yêu cầu
         String authorizationHeader = httpRequest.getHeader("Authorization");
         APICustomize<String> response = userService.delete(id, authorizationHeader);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+    @PutMapping("/user/update-info")
+    public ResponseEntity<?> updateUserInfo(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestBody UpdateInfoRequest request) {
+        APICustomize<ItsRctUserResponse> response = userService.updateUserInfo(authorizationHeader, request);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

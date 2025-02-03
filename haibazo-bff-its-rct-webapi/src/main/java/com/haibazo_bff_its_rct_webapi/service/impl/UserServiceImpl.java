@@ -1,6 +1,7 @@
 package com.haibazo_bff_its_rct_webapi.service.impl;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
+import com.haibazo_bff_its_rct_webapi.dto.request.UpdateInfoRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.UserRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.*;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
@@ -255,6 +256,48 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         return new APICustomize<>(ApiError.NO_CONTENT.getCode(), ApiError.NO_CONTENT.getMessage(), "Successfully deleted user with id = " + id);
+    }
+
+    @Override
+    public APICustomize<ItsRctUserResponse> updateUserInfo(String authorizationHeader, UpdateInfoRequest request) {
+        // Lấy JWT từ header
+        String token = tokenUtil.extractToken(authorizationHeader);
+        if (token == null) {
+            throw new UnauthorizedException();
+        }
+
+        // Lấy ID người dùng từ token
+        Long haizaoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
+        User user = userRepository.findByHaibazoAccountId(haizaoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haizaoAccountId", haizaoAccountId.toString()));
+
+        // Gọi account-service để cập nhật thông tin tài khoản
+        ItsRctUserResponse updatedUserResponse = webClient.put()
+                .uri("/api/bff/its-rct/v1/account/user/account/update/{haibazoAccountId}", haizaoAccountId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(ItsRctUserResponse.class)
+                .block(); // Chờ cho phản hồi
+
+        // Kiểm tra xem cập nhật có thành công không
+        if (updatedUserResponse == null) {
+            throw new RuntimeException("Failed to update user info in account-service.");
+        }
+
+        // Gọi lại thông tin người dùng từ account-service để lấy toàn bộ thông tin
+        ItsRctUserResponse finalUserResponse = webClient.get()
+                .uri("/api/bff/its-rct/v1/account/user/account/{id}", user.getHaibazoAccountId())
+                .retrieve()
+                .bodyToMono(ItsRctUserResponse.class)
+                .block();
+
+        // Gộp thông tin từ User và Account
+        if (finalUserResponse != null) {
+            finalUserResponse.setId(user.getId());
+            finalUserResponse.setHaibazoAuthAlias(user.getHaibazoAccountId());
+        }
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), finalUserResponse);
     }
 
 

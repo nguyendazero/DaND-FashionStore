@@ -13,4 +13,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     void deleteByHaibazoAccountId(Long haibazoAccountId);
+    Optional<Account> findByHaibazoAccountId(Long haibazoAccountId);   
 }

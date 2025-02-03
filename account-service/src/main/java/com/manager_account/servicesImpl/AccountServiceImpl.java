@@ -2,6 +2,7 @@ package com.manager_account.servicesImpl;
 
 import com.manager_account.dto.request.SignInRequest;
 import com.manager_account.dto.request.SignUpRequest;
+import com.manager_account.dto.request.UpdateInfoRequest;
 import com.manager_account.dto.request.UserRequest;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
@@ -212,5 +213,27 @@ public class AccountServiceImpl implements AccountService {
 
         String statusMessage = accountToUpdate.isEnabled() ? "unblocked" : "blocked";
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Account has been " + statusMessage);
+    }
+
+    @Override
+    public APICustomize<String> updateAccount(Long haibazoAccountId, UpdateInfoRequest request) {
+        // Tìm kiếm tài khoản theo haibazoAccountId
+        Account account = accountRepository.findByHaibazoAccountId(haibazoAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "haibazoAccountId", haibazoAccountId.toString()));
+
+        // Cập nhật thông tin tài khoản
+        if (request.getAvatar() != null) {
+            account.setAvatar(request.getAvatar());
+        }
+        if (request.getFullName() != null) {
+            account.setFullName(request.getFullName());
+        }
+        if (request.getStatus() != null) {
+            account.setStatus(request.getStatus());
+        }
+
+        accountRepository.save(account); // Lưu thay đổi
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Account info updated successfully");
     }
 }
