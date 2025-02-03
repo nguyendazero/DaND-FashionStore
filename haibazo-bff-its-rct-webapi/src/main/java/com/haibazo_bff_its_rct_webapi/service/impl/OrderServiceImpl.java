@@ -6,6 +6,7 @@ import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctOrderResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.OrderStatisticsResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
+import com.haibazo_bff_its_rct_webapi.enums.CouponType;
 import com.haibazo_bff_its_rct_webapi.enums.OrderStatus;
 import com.haibazo_bff_its_rct_webapi.exception.*;
 import com.haibazo_bff_its_rct_webapi.model.*;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
@@ -87,8 +89,14 @@ public class OrderServiceImpl implements OrderService {
                         .multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (coupon != null && totalPrice.compareTo(coupon.getMinSpend()) < 0) {
-            throw new MinSpendCouponException(coupon.getMinSpend());
+        // Kiểm tra coupon
+        if (coupon != null) {
+            if (totalPrice.compareTo(coupon.getMinSpend()) < 0) {
+                throw new MinSpendCouponException(coupon.getMinSpend());
+            }
+
+            // Tính toán lại giá trị đơn hàng dựa trên discount của coupon
+            totalPrice = totalPrice.multiply(BigDecimal.ONE.subtract(coupon.getDiscount().divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP)));
         }
 
         for (CartItem cartItem : cartItems) {
