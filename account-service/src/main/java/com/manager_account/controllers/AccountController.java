@@ -9,6 +9,7 @@ import com.manager_account.entities.Account;
 import com.manager_account.security.AccessTokenResponse;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +47,13 @@ public class AccountController {
         String refreshToken = request.get("refreshToken");
         String newAccessToken = jwtUtils.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
+    }
+
+    @PutMapping("/admin/account/change-role")
+    public ResponseEntity<?> changeRole(@RequestParam Long id, HttpServletRequest httpRequest) {
+        String authorizationHeader = httpRequest.getHeader("Authorization");
+        APICustomize<String> response = accountService.changeRole(id, authorizationHeader);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
 }

@@ -8,12 +8,14 @@ import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
 import com.manager_account.entities.Account;
 import com.manager_account.enums.ApiError;
+import com.manager_account.exceptions.ErrorPermissionException;
 import com.manager_account.exceptions.ErrorSignInException;
 import com.manager_account.exceptions.ResourceAlreadyExistsException;
 import com.manager_account.exceptions.ResourceNotFoundException;
 import com.manager_account.repositories.AccountRepository;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
+import com.manager_account.utils.TokenUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,6 +43,7 @@ public class AccountServiceImpl implements AccountService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
+    private final TokenUtil tokenUtil;
 
     @PostConstruct // Khởi tạo WebClient khi bean được tạo
     public void init() {
@@ -172,5 +175,24 @@ public class AccountServiceImpl implements AccountService {
         } catch (Exception e) {
             throw new ErrorSignInException();
         }
+    }
+
+    @Override
+    public APICustomize<String> changeRole(Long id, String authorizationHeader) {
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userCurrent = tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token));
+
+        if (!userCurrent.getRole().equals("ROLE_ADMIN") || !userCurrent.getUsername().equals("admin")) {
+            throw new ErrorPermissionException();
+        }
+
+        Account accountToUpdate = accountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id.toString()));
+
+        String newRole = accountToUpdate.getRole().equals("ROLE_ADMIN") ? "ROLE_USER" : "ROLE_ADMIN";
+        accountToUpdate.setRole(newRole);
+        accountRepository.save(accountToUpdate);
+
+        return new APICustomize<>(ApiError.OK.getCode(), "Role changed successfully", "New role: " + newRole);
     }
 }

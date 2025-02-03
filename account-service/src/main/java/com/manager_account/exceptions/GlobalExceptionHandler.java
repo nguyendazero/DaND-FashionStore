@@ -56,6 +56,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
+    @ExceptionHandler(ErrorPermissionException.class)
+    public ResponseEntity<ErrorResponse> handleErrorPermissionException(HttpServletRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.FORBIDDEN.value());
+        errorResponse.setTimestamp(LocalDateTime.now().toString());
+        errorResponse.setPath(request.getRequestURI());
+
+        List<ErrorDetail> errors = new ArrayList<>();
+
+        String errorKey = "ERRORPERMISSION";
+        String errorMessage = messages.getProperty(errorKey);
+
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setErrorCode("403");
+        errorDetail.setErrorMessageId(errorKey);
+        errorDetail.setErrorMessage(errorMessage);
+
+        errors.add(errorDetail);
+        errorResponse.setErrors(errors);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(HttpServletRequest request, ResourceAlreadyExistsException ex) {
 

@@ -15,4 +15,6 @@ public interface AccountService {
 
     public APICustomize<SignInResponse> signIn(SignInRequest request);
 
+    public APICustomize<String> changeRole(Long id, String authorizationHeader);
+
 }
