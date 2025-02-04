@@ -65,7 +65,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public APICustomize<ItsRctUserResponse> signUp(SignUpRequest request) {
+    public APICustomize<String> signUp(SignUpRequest request) {
         // Kiểm tra xem email đã tồn tại chưa
         if (accountRepository.existsByEmail(request.getEmail())) {
             throw new ResourceAlreadyExistsException("Account", "email", request.getEmail());
@@ -104,7 +104,7 @@ public class AccountServiceImpl implements AccountService {
 
         newAccount.setFullName(request.getName());
         newAccount.setEmail(request.getEmail());
-        newAccount.setEnabled(false); // Đặt trạng thái ban đầu là chưa kích hoạt
+        newAccount.setEnabled(false);
         newAccount.setRole("ROLE_USER");
         newAccount.setCreatedAt(LocalDateTime.now());
         newAccount.setUpdatedAt(LocalDateTime.now());
@@ -141,24 +141,16 @@ public class AccountServiceImpl implements AccountService {
                 savedAccount.getUpdatedAt()
         );
 
-        return new APICustomize<>(ApiError.CREATED.getCode(), "Đã gửi mã xác thực. Vui lòng xác thực để kích hoạt tài khoản.", userResponse);
+        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), "Đã gửi mã xác thực. Vui lòng xác thực để kích hoạt tài khoản.");
     }
 
     @Override
     public APICustomize<ItsRctUserResponse> verifyEmail(String email, String code) {
         VerificationInfo verificationInfo = verificationMap.get(email);
-        if (verificationInfo == null) {
-            return new APICustomize<>("400", "Không tìm thấy thông tin xác thực cho email này.", null);
-        }
-
-        // Kiểm tra mã xác thực
-        if (!verificationInfo.getVerificationCode().equals(code)) {
-            return new APICustomize<>("400", "Mã xác thực không chính xác", null);
-        }
-
-        // Kiểm tra thời gian hết hạn
-        if (Duration.between(verificationInfo.getSentTime(), LocalDateTime.now()).getSeconds() > 60) {
-            return new APICustomize<>("400", "Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.", null);
+        if (verificationInfo == null ||
+                !verificationInfo.getVerificationCode().equals(code) ||
+                Duration.between(verificationInfo.getSentTime(), LocalDateTime.now()).getSeconds() > 60) {
+            throw new InValidVerifyEmailException();
         }
 
         // Cập nhật tài khoản đã tạo trước đó
@@ -189,7 +181,7 @@ public class AccountServiceImpl implements AccountService {
 
         // Xóa thông tin xác thực sau khi xác thực thành công
         verificationMap.remove(email);
-        return new APICustomize<>("200", "Xác thực email thành công!", userResponse);
+        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), userResponse);
     }
 
     @Override
@@ -249,7 +241,7 @@ public class AccountServiceImpl implements AccountService {
                 jwtToken,
                 account.getRefreshToken()
         );
-
+        
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), response);
     }
 

@@ -12,7 +12,7 @@ public interface AccountService {
 
     public Account getAccountById(Long id);
 
-    public APICustomize<ItsRctUserResponse> signUp(SignUpRequest request);
+    public APICustomize<String> signUp(SignUpRequest request);
 
     public APICustomize<ItsRctUserResponse> verifyEmail(String email, String code);
 

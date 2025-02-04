@@ -38,7 +38,7 @@ public class AccountController {
 
     @PostMapping("/public/sign-up")
     public ResponseEntity<?> signUp(@RequestBody SignUpRequest accountRequest) {
-        APICustomize<ItsRctUserResponse> response = accountService.signUp(accountRequest);
+        APICustomize<String> response = accountService.signUp(accountRequest);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
