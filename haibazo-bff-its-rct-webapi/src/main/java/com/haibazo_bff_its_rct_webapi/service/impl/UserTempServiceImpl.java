@@ -11,8 +11,10 @@ import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.UserTempService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -97,5 +99,12 @@ public class UserTempServiceImpl implements UserTempService {
         userTempRepository.delete(userTemp);
         
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Successfully deleted guest with id = " + id);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void deleteOldUserTemps() {
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        List<UserTemp> oldUsers = userTempRepository.findAllByCreatedAtBefore(thirtyDaysAgo);
+        userTempRepository.deleteAll(oldUsers);
     }
 }
