@@ -1,9 +1,6 @@
 package com.manager_account.servicesImpl;
 
-import com.manager_account.dto.request.SignInRequest;
-import com.manager_account.dto.request.SignUpRequest;
-import com.manager_account.dto.request.UpdateInfoRequest;
-import com.manager_account.dto.request.UserRequest;
+import com.manager_account.dto.request.*;
 import com.manager_account.dto.response.APICustomize;
 import com.manager_account.dto.response.ItsRctUserResponse;
 import com.manager_account.dto.response.SignInResponse;
@@ -125,6 +122,15 @@ public class AccountServiceImpl implements AccountService {
 
         // Kiểm tra xem userId có null không
         if (userId == null) throw new ResourceNotFoundException("User", "id", "User ID is null");
+
+        // Tạo AddUserCouponRequest và gửi yêu cầu tạo UserCoupon
+        AddUserCouponRequest couponRequest = new AddUserCouponRequest(userId, 1L);
+        webClient.post()
+                .uri("/api/bff/its-rct/v1/ecommerce/admin/user-coupon")
+                .bodyValue(couponRequest)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
 
         // Tạo đối tượng UserResponse
         ItsRctUserResponse userResponse = new ItsRctUserResponse(
