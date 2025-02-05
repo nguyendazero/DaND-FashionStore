@@ -18,7 +18,7 @@ public class ItsRctReviewResponse {
     private String content;
     private BigDecimal stars;
     private List<ItsRctImageResponse> images;
-    private User user;
+    private ItsRctUserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

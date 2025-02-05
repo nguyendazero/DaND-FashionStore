@@ -37,8 +37,4 @@ public class Review extends BaseEntity{
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "user_temp_id")
-    private UserTemp userTemp;
-
 }

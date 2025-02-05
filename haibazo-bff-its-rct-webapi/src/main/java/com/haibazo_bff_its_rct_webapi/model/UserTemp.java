@@ -38,10 +38,6 @@ public class UserTemp extends BaseEntity{
 
     @JsonIgnore
     @OneToMany(mappedBy = "userTemp", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review> reviews = new ArrayList<>();
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "userTemp", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
     @JsonIgnore

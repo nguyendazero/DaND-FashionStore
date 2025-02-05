@@ -65,12 +65,15 @@ public class ReviewServiceImpl implements ReviewService {
                                     image.getEntityId()
                             )).toList();
 
+                    // Lấy thông tin người dùng từ ItsRctUserResponse
+                    ItsRctUserResponse userResponse = tokenUtil.getUserByHaibazoAccountId(review.getUser().getHaibazoAccountId());
+
                     return new ItsRctReviewResponse(
                             review.getId(),
                             review.getContent(),
                             review.getStars(),
                             imageResponses,
-                            review.getUser(),
+                            userResponse,  // Sử dụng ItsRctUserResponse
                             review.getCreatedAt(),
                             review.getUpdatedAt()
                     );
@@ -97,13 +100,16 @@ public class ReviewServiceImpl implements ReviewService {
                         image.getEntityId()
                 )).toList();
 
+        // Lấy thông tin người dùng từ ItsRctUserResponse
+        ItsRctUserResponse userResponse = tokenUtil.getUserByHaibazoAccountId(review.getUser().getHaibazoAccountId());
+
         // Tạo phản hồi
         ItsRctReviewResponse response = new ItsRctReviewResponse(
                 review.getId(),
                 review.getContent(),
                 review.getStars(),
                 imageResponses,
-                review.getUser(),
+                userResponse,
                 review.getCreatedAt(),
                 review.getUpdatedAt()
         );
@@ -124,19 +130,16 @@ public class ReviewServiceImpl implements ReviewService {
         ItsRctUserResponse userResponse;
 
         if (token != null) {
-            // Giải mã token để lấy haibazoAccountId
             Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
-
-            // Gọi account-service để lấy thông tin tài khoản
             userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
 
             // Kiểm tra xem người dùng đã mua sản phẩm chưa
             boolean hasPurchased = orderService.hasUserPurchasedProduct(userResponse.getId(), productId);
             if (!hasPurchased) {
-                throw new ErrorReviewProductException(); // Người dùng chưa mua sản phẩm
+                throw new ErrorReviewProductException();
             }
         } else {
-            throw new UnauthorizedException(); // Người dùng chưa đăng nhập
+            throw new UnauthorizedException();
         }
 
         // Tạo review
@@ -195,13 +198,28 @@ public class ReviewServiceImpl implements ReviewService {
         // Xóa cache trong Redis để cập nhật dữ liệu mới
         redisService.deleteKeysStartingWith("products");
 
+        // Tạo phản hồi với ItsRctUserResponse
+        ItsRctUserResponse userResponseDto = new ItsRctUserResponse(
+                user.getId(),
+                userResponse.getUsername(),
+                userResponse.getEmail(),
+                userResponse.getFullName(),
+                userResponse.getHaibazoAccountId(),
+                userResponse.isEnabled(),
+                userResponse.getRole(),
+                userResponse.getStatus(),
+                userResponse.getAvatar(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+
         // Tạo phản hồi
         ItsRctReviewResponse response = new ItsRctReviewResponse(
                 savedReview.getId(),
                 savedReview.getContent(),
                 savedReview.getStars(),
                 imageResponses,
-                savedReview.getUser(),
+                userResponseDto,
                 savedReview.getCreatedAt(),
                 savedReview.getUpdatedAt()
         );
