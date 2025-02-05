@@ -10,6 +10,7 @@ import com.haibazo_bff_its_rct_webapi.model.Contact;
 import com.haibazo_bff_its_rct_webapi.model.User;
 import com.haibazo_bff_its_rct_webapi.model.UserTemp;
 import com.haibazo_bff_its_rct_webapi.repository.ContactRepository;
+import com.haibazo_bff_its_rct_webapi.repository.UserRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.ContactService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
@@ -26,6 +27,7 @@ public class ContactServiceImpl implements ContactService {
     private final TokenUtil tokenUtil;
     private final ContactRepository contactRepository;
     private final UserTempRepository userTempRepository;
+    private final UserRepository userRepository;
 
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
@@ -35,24 +37,25 @@ public class ContactServiceImpl implements ContactService {
         // Lấy JWT từ header
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = null;
+        Long haibazoAccountId;
 
         if (token != null) {
-            // Giải mã token để lấy haibazoAccountId
-            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
-
-            // Gọi account-service để lấy thông tin tài khoản
+            haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
             userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        } else {
+            haibazoAccountId = null;
         }
 
         // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
         if (userResponse != null) {
             contact.setFullName(userResponse.getFullName());
             contact.setEmail(userResponse.getEmail());
-            contact.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+            contact.setUser(userRepository.findByHaibazoAccountId(haibazoAccountId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "haibazoAccountId", haibazoAccountId.toString())));
         } else {
             contact.setFullName(request.getFullName());
             contact.setEmail(request.getEmail());
-            
+
             // Tạo UserTemp
             UserTemp userTemp = new UserTemp();
             userTemp.setFullName(contact.getFullName());

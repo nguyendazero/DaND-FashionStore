@@ -37,6 +37,7 @@ public class UserServiceImpl implements UserService {
     private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final NotificationRepository notificationRepository;
     private final WebClient.Builder webClientBuilder;
     private WebClient webClient;
     private final WishListRepository wishListRepository;
@@ -84,7 +85,7 @@ public class UserServiceImpl implements UserService {
         // Gộp thông tin từ User và Account
         if (userResponse != null) {
             userResponse.setId(user.getId());
-            userResponse.setHaibazoAuthAlias(user.getHaibazoAccountId());
+            userResponse.setHaibazoAccountId(user.getHaibazoAccountId());
         }
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), userResponse);
@@ -95,6 +96,10 @@ public class UserServiceImpl implements UserService {
     public Long create(UserRequest request) {
         User user = new User();
         user.setHaibazoAccountId(request.getHaibazoAccountId());
+        Notification notification = notificationRepository.findById(request.getNotificationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", request.getNotificationId().toString()));
+
+        user.setNotification(notification);
         return userRepository.save(user).getId();
     }
 
@@ -318,7 +323,7 @@ public class UserServiceImpl implements UserService {
         // Gộp thông tin từ User và Account
         if (finalUserResponse != null) {
             finalUserResponse.setId(user.getId());
-            finalUserResponse.setHaibazoAuthAlias(user.getHaibazoAccountId());
+            finalUserResponse.setHaibazoAccountId(user.getHaibazoAccountId());
         }
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), finalUserResponse);

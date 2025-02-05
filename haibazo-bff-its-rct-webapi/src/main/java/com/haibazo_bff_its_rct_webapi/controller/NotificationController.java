@@ -25,12 +25,6 @@ public class NotificationController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    @GetMapping("/admin/notification-user/notifications")
-    public ResponseEntity<?> notificationsByUserId(@RequestParam Long userId) {
-        APICustomize<List<ItsRctNotificationResponse>> response = notificationService.getNotificationsByUserId(userId);
-        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
-    }
-
     @PostMapping("/admin/notification")
     public ResponseEntity<?> create(@RequestBody AddNotificationRequest request) {
         APICustomize<ItsRctNotificationResponse> response = notificationService.create(request);
@@ -40,6 +34,12 @@ public class NotificationController {
     @GetMapping("/user/notification")
     public ResponseEntity<?> notification(@RequestParam Long id) {
         APICustomize<ItsRctNotificationResponse> response = notificationService.notification(id);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+    @GetMapping("/user/notification-by-user-id")
+    public ResponseEntity<?> notificationByUserId(@RequestParam Long userId) {
+        APICustomize<ItsRctNotificationResponse> response = notificationService.notificationByUserId(userId);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

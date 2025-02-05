@@ -112,7 +112,7 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.save(savedAccount);
 
         // Tạo đối tượng UserRequest và gửi yêu cầu tạo người dùng
-        UserRequest user = new UserRequest(savedAccount.getHaibazoAccountId());
+        UserRequest user = new UserRequest(savedAccount.getHaibazoAccountId(), 1L);
         Long userId = webClient.post()
                 .uri("/api/bff/its-rct/v1/ecommerce/public/user/create")
                 .bodyValue(user)
@@ -128,14 +128,6 @@ public class AccountServiceImpl implements AccountService {
         webClient.post()
                 .uri("/api/bff/its-rct/v1/ecommerce/admin/user-coupon")
                 .bodyValue(couponRequest)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .block();
-        
-        AddNotificationUserRequest notificationRequest = new AddNotificationUserRequest(userId, 1L);
-        webClient.post()
-                .uri("/api/bff/its-rct/v1/ecommerce/admin/notification-user")
-                .bodyValue(notificationRequest)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();

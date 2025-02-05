@@ -10,6 +10,7 @@ import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.*;
 import com.haibazo_bff_its_rct_webapi.repository.PostCommentRepository;
 import com.haibazo_bff_its_rct_webapi.repository.PostRepository;
+import com.haibazo_bff_its_rct_webapi.repository.UserRepository;
 import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
 import com.haibazo_bff_its_rct_webapi.service.PostCommentService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
@@ -25,6 +26,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     private final PostRepository postRepository;
     private final PostCommentRepository postCommentRepository;
+    private final UserRepository userRepository;
     private final UserTempRepository userTempRepository;
     private final TokenUtil tokenUtil;
 
@@ -38,13 +40,13 @@ public class PostCommentServiceImpl implements PostCommentService {
         // Lấy JWT từ header
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = null;
+        Long haibazoAccountId; // Khai báo biến haibazoAccountId
 
         if (token != null) {
-            // Giải mã token để lấy haibazoAccountId
-            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
-
-            // Gọi account-service để lấy thông tin tài khoản
+            haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
             userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        } else {
+            haibazoAccountId = null;
         }
 
         // Tạo đối tượng PostComment
@@ -54,7 +56,9 @@ public class PostCommentServiceImpl implements PostCommentService {
 
         // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
         if (userResponse != null) {
-            postComment.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+            User user = userRepository.findByHaibazoAccountId(haibazoAccountId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "haitibaAccountId", haibazoAccountId.toString()));
+            postComment.setUser(user);
         } else {
             // Nếu chưa xác thực, tạo UserTemp
             UserTemp userTemp = new UserTemp();

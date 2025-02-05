@@ -25,17 +25,16 @@ public class User extends BaseEntity{
     @Column(name = "haibazo_account_id", nullable = false)
     private Long haibazoAccountId;
 
-    public User(Long id, Long haibazoAuthAlias) {
+    @ManyToOne
+    @JoinColumn(name = "notification_id")
+    private Notification notification;
+
+    public User(Long id, Long haibazoAccountId, Notification notification) {
         this.id = id;
-        this.haibazoAccountId = haibazoAuthAlias;
+        this.haibazoAccountId = haibazoAccountId;
+        this.notification = notification;
     }
-
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<UserRole> userRoles = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<NotificationUser> notificationUsers = new ArrayList<>();
-
+    
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WishList> wishLists = new ArrayList<>();
 

@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserRequest {
     private Long haibazoAccountId;
+    private Long notificationId;
 }

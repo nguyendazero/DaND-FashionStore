@@ -24,7 +24,5 @@ public class Notification extends BaseEntity{
 
     @Column(name = "content", nullable = false)
     private String content;
-
-    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<NotificationUser> notificationUsers = new ArrayList<>();
+    
 }

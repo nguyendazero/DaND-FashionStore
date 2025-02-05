@@ -10,10 +10,7 @@ import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.exception.ErrorPermissionException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.*;
-import com.haibazo_bff_its_rct_webapi.repository.ImageRepository;
-import com.haibazo_bff_its_rct_webapi.repository.ProductRepository;
-import com.haibazo_bff_its_rct_webapi.repository.QuestionRepository;
-import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
+import com.haibazo_bff_its_rct_webapi.repository.*;
 import com.haibazo_bff_its_rct_webapi.service.MinioService;
 import com.haibazo_bff_its_rct_webapi.service.QuestionService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
@@ -36,6 +33,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final ProductRepository productRepository;
     private final QuestionRepository questionRepository;
     private final UserTempRepository userTempRepository;
+    private final UserRepository userRepository;
     private final String BUCKET_NAME = "questions";
     private final ImageRepository imageRepository;
     private final MinioService minioService;
@@ -56,18 +54,19 @@ public class QuestionServiceImpl implements QuestionService {
         // Lấy JWT từ header
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = null;
+        Long haibazoAccountId;
 
         if (token != null) {
-            // Giải mã token để lấy haibazoAccountId
-            Long haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
-
-            // Gọi account-service để lấy thông tin tài khoản
+            haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
             userResponse = tokenUtil.getUserByHaibazoAccountId(haibazoAccountId);
+        } else {
+            haibazoAccountId = null;
         }
-
         // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
         if (userResponse != null) {
-            question.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+            User user = userRepository.findByHaibazoAccountId(haibazoAccountId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "haibazoAccountId", haibazoAccountId.toString()));
+            question.setUser(user);
         } else {
             // Nếu chưa xác thực, tạo UserTemp
             UserTemp userTemp = new UserTemp();

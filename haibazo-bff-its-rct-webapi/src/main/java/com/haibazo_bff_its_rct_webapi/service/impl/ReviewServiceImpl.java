@@ -12,10 +12,7 @@ import com.haibazo_bff_its_rct_webapi.exception.ErrorReviewProductException;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.model.*;
-import com.haibazo_bff_its_rct_webapi.repository.ImageRepository;
-import com.haibazo_bff_its_rct_webapi.repository.ProductRepository;
-import com.haibazo_bff_its_rct_webapi.repository.ReviewRepository;
-import com.haibazo_bff_its_rct_webapi.repository.UserTempRepository;
+import com.haibazo_bff_its_rct_webapi.repository.*;
 import com.haibazo_bff_its_rct_webapi.service.MinioService;
 import com.haibazo_bff_its_rct_webapi.service.OrderService;
 import com.haibazo_bff_its_rct_webapi.service.RedisService;
@@ -39,7 +36,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final RedisService redisService;
-    private final UserTempRepository userTempRepository;
+    private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final String BUCKET_NAME = "reviews";
     private final ImageRepository imageRepository;
@@ -147,7 +144,11 @@ public class ReviewServiceImpl implements ReviewService {
         review.setStars(request.getStars());
         review.setContent(request.getContent());
         review.setProduct(product);
-        review.setUser(new User(userResponse.getId(), userResponse.getHaibazoAuthAlias()));
+
+        // Lấy User từ repository
+        User user = userRepository.findByHaibazoAccountId(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "haibazoAccountId", userResponse.getId().toString()));
+        review.setUser(user);
 
         // Lưu review vào cơ sở dữ liệu
         Review savedReview = reviewRepository.save(review);

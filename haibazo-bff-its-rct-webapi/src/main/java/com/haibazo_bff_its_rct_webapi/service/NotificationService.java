@@ -10,11 +10,11 @@ public interface NotificationService {
 
     public APICustomize<List<ItsRctNotificationResponse>> notifications();
 
-    public APICustomize<List<ItsRctNotificationResponse>> getNotificationsByUserId(Long userId);
-
     public APICustomize<ItsRctNotificationResponse> create(AddNotificationRequest request);
 
     public APICustomize<ItsRctNotificationResponse> notification(Long id);
+
+    public APICustomize<ItsRctNotificationResponse> notificationByUserId(Long userId);
 
     public APICustomize<String> delete(Long id);
 

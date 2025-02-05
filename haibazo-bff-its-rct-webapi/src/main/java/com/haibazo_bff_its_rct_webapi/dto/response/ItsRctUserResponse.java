@@ -14,7 +14,7 @@ public class ItsRctUserResponse {
     private String username;
     private String email;
     private String fullName;
-    private Long haibazoAuthAlias;
+    private Long haibazoAccountId;
     private boolean enabled;
     private String role;
     private String status;
