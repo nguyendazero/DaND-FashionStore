@@ -131,6 +131,14 @@ public class AccountServiceImpl implements AccountService {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
+        
+        AddNotificationUserRequest notificationRequest = new AddNotificationUserRequest(userId, 1L);
+        webClient.post()
+                .uri("/api/bff/its-rct/v1/ecommerce/admin/notification-user")
+                .bodyValue(notificationRequest)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
 
         // Tạo đối tượng UserResponse
         ItsRctUserResponse userResponse = new ItsRctUserResponse(
