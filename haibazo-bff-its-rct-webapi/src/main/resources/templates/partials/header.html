@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="headerFragment">
+    <nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/home}">Furni<span>.</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni" aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarsFurni">
+                <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+                    <li>
+                        <a class="nav-link" th:href="@{/home}">Home</a>
+                    </li>
+                    <li><a class="nav-link" th:href="@{/book-filter}">Shop</a></li>
+                    <li><a class="nav-link" th:href="@{/about}">About us</a></li>
+                    <li><a class="nav-link" th:href="@{/service}">Services</a></li>
+                    <li><a class="nav-link" th:href="@{/blog}">Blog</a></li>
+                    <li><a class="nav-link" th:href="@{/contact}">Contact us</a></li>
+
+                </ul>
+                <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
+                    <li th:if="${session.userLogin == null}">
+                        <a class="nav-link" th:href="@{/user/login-page}">
+                            <img th:src="@{/images/user.svg}">
+                        </a>
+                    </li>
+                    <li th:if="${session.userLogin != null}" class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img th:src="@{/images/user.svg}" alt="">
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/profile}">
+                                    <i class="fas fa-user" style="color: #3b5d50; margin-right: 5px;"></i> Tài khoản của tôi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/change-pass-form}">
+                                    <i class="fas fa-key" style="color: #3b5d50; margin-right: 5px;"></i> Đổi mật khẩu
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/update-info-form}">
+                                    <i class="fas fa-info-circle" style="color: #3b5d50; margin-right: 5px;"></i> Thay đổi thông tin
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/order/history}">
+                                    <i class="fas fa-history" style="color: #3b5d50; margin-right: 5px;"></i> Lịch sử mua hàng
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/settings}">
+                                    <i class="fas fa-cog" style="color: #3b5d50; margin-right: 5px;"></i> Cài đặt
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/logout}">
+                                    <i class="fas fa-sign-out-alt" style="color: #3b5d50; margin-right: 5px;"> </i> Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+
+                    </li>
+                    <li>
+                        <a class="nav-link" th:href="@{/cart}">
+                            <img th:src="@{/images/cart.svg}">
+                        </a>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+</div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!-- sidebar.html -->
+<nav id="sidebar" xmlns:th="http://www.w3.org/1999/xhtml">
+    <div class="sidebar-header">
+        <h3>Bookstore Admin</h3>
+        <strong>BA</strong>
+    </div>
+    <ul class="list-unstyled components">
+        <li class="active">
+            <a th:href="@{/home-admin}">
+                <i class="fa fa-tachometer-alt"></i> Dashboard
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/book}">
+                <i class="fa fa-book"></i> Books
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/order}">
+                <i class="fa fa-shopping-cart"></i> Orders
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/user}">
+                <i class="fa fa-users"></i> Users
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/coupon}">
+                <i class="fa fa-ticket-alt"></i> Coupons
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/author}">
+                <i class="fa fa-pen-nib"></i> Authors
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/category}">
+                <i class="fa fa-list-alt"></i> Categories
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/admin/settings}">
+                <i class="fa fa-cogs"></i> Settings
+            </a>
+        </li>
+    </ul>
+</nav>

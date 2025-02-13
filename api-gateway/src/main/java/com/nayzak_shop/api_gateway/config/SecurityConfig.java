@@ -29,6 +29,10 @@ public class SecurityConfig {
     private String jwtSecret;
 
     private static final String[] PUBLIC_ENDPOINTS = {
+            "/css/**",
+            "/js/**",
+            "/scss/**",
+            "/images/**",
             "/api/bff/its-rct/v1/account/public/**",
             "/api/bff/its-rct/v1/ecommerce/public/**"
     };
