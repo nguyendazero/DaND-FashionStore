@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -173,6 +174,12 @@ public class UserServiceImpl implements UserService {
             // Lấy danh sách images của sản phẩm
             APICustomize<List<ItsRctImageResponse>> images = imageService.getImages(product.getId(), EntityType.valueOf("PRODUCT"));
 
+            BigDecimal lowestPrice = product.getProductAvailableVariants().stream()
+                    .map(ProductAvailableVariant::getPrice)
+                    .filter(Objects::nonNull) // Lọc các giá null nếu có
+                    .min(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO); // Giá mặc định nếu không có
+            
             // Tạo response cho sản phẩm
             ItsRctProductResponse productResponse = new ItsRctProductResponse(
                     product.getId(),
@@ -188,7 +195,8 @@ public class UserServiceImpl implements UserService {
                     productAvailableVariants.getResult(),
                     categoryResponse.getResult(),
                     styleResponse.getResult(),
-                    discountResponse != null ? discountResponse.getResult() : null
+                    discountResponse != null ? discountResponse.getResult() : null,
+                    lowestPrice
             );
 
             productResponses.add(productResponse);

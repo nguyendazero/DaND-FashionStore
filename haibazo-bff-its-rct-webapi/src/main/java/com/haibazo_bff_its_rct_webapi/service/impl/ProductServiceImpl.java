@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -124,6 +125,12 @@ public class ProductServiceImpl implements ProductService {
             // Lấy danh sách images của sản phẩm
             APICustomize<List<ItsRctImageResponse>> images = imageService.getImages(product.getId(), EntityType.valueOf("PRODUCT"));
 
+            BigDecimal lowestPrice = product.getProductAvailableVariants().stream()
+                    .map(ProductAvailableVariant::getPrice)
+                    .filter(Objects::nonNull) // Lọc các giá null nếu có
+                    .min(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO); // Giá mặc định nếu không có
+            
             // Tạo response cho sản phẩm
             ItsRctProductResponse productResponse = new ItsRctProductResponse(
                     product.getId(),
@@ -139,7 +146,8 @@ public class ProductServiceImpl implements ProductService {
                     productAvailableVariants.getResult(),
                     categoryResponse.getResult(),
                     styleResponse.getResult(),
-                    discountResponse != null ? discountResponse.getResult() : null
+                    discountResponse != null ? discountResponse.getResult() : null,
+                    lowestPrice
             );
 
             productResponses.add(productResponse);
@@ -152,6 +160,72 @@ public class ProductServiceImpl implements ProductService {
         }
 
         System.out.println("Lấy từ database");
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponses);
+    }
+
+    @SneakyThrows
+    @Override
+    @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
+    public APICustomize<List<ItsRctProductResponse>> getDiscountedProducts() {
+        // Tạo khóa Redis cho danh sách sản phẩm giảm giá
+        String redisKey = "discounted_products";
+        
+        // Lấy danh sách sản phẩm có discount không null
+        List<Product> discountedProducts = productRepository.findByDiscountNotNull();
+
+        if (discountedProducts.isEmpty()) {
+            throw new ListProductEmptyException();
+        }
+
+        List<ItsRctProductResponse> productResponses = new ArrayList<>();
+
+        for (Product product : discountedProducts) {
+            // Tính lại giá trị trung bình của Rating
+            BigDecimal rating = Optional.ofNullable(reviewRepository.findAverageStarsByProduct(product))
+                    .orElse(BigDecimal.ZERO);
+
+            // Lấy thông tin danh mục
+            APICustomize<ItsRctCategoryResponse> categoryResponse = categoryService.category(product.getCategory().getId());
+            // Lấy thông tin style
+            APICustomize<ItsRctStyleResponse> styleResponse = styleService.style(product.getStyle().getId());
+            // Lấy thông tin discount nếu có
+            APICustomize<ItsRctDiscountResponse> discountResponse = null;
+            if (product.getDiscount() != null) {
+                discountResponse = discountService.discount(product.getDiscount().getId());
+            }
+            // Lấy danh sách available variant của sản phẩm
+            APICustomize<List<ItsRctProductAvailableVariantResponse>> productAvailableVariants = productAvailableVariantService.productAvailableVariants(product.getId());
+            // Lấy danh sách images của sản phẩm
+            APICustomize<List<ItsRctImageResponse>> images = imageService.getImages(product.getId(), EntityType.valueOf("PRODUCT"));
+
+            BigDecimal lowestPrice = product.getProductAvailableVariants().stream()
+                    .map(ProductAvailableVariant::getPrice)
+                    .filter(Objects::nonNull) // Lọc các giá null nếu có
+                    .min(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO);
+            
+            // Tạo response cho sản phẩm
+            ItsRctProductResponse productResponse = new ItsRctProductResponse(
+                    product.getId(),
+                    product.getName(),
+                    product.getWeight(),
+                    rating,
+                    product.getViewCount(),
+                    product.getDescription(),
+                    product.getDescription(),
+                    product.getIntroduction(),
+                    product.getHighLightedImageUrl(),
+                    images.getResult(),
+                    productAvailableVariants.getResult(),
+                    categoryResponse.getResult(),
+                    styleResponse.getResult(),
+                    discountResponse != null ? discountResponse.getResult() : null,
+                    lowestPrice
+            );
+
+            productResponses.add(productResponse);
+        }
+        
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponses);
     }
 
@@ -184,6 +258,12 @@ public class ProductServiceImpl implements ProductService {
         // Lấy danh sách images của product
         APICustomize<List<ItsRctImageResponse>> images = imageService.getImages(id, EntityType.valueOf("PRODUCT"));
 
+        BigDecimal lowestPrice = product.getProductAvailableVariants().stream()
+                .map(ProductAvailableVariant::getPrice)
+                .filter(Objects::nonNull) // Lọc các giá null nếu có
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+        
         ItsRctProductResponse productResponse = new ItsRctProductResponse(
                 product.getId(),
                 product.getName(),
@@ -198,7 +278,8 @@ public class ProductServiceImpl implements ProductService {
                 productAvailableVariants.getResult(),
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
-                discountResponse != null ? discountResponse.getResult() : null
+                discountResponse != null ? discountResponse.getResult() : null,
+                lowestPrice
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponse);
@@ -300,7 +381,8 @@ public class ProductServiceImpl implements ProductService {
                 new ArrayList<>(),
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
-                discountResponse != null ? discountResponse.getResult() : null
+                discountResponse != null ? discountResponse.getResult() : null,
+                BigDecimal.valueOf(0.00)
         );
 
         return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), productResponse);
@@ -451,7 +533,8 @@ public class ProductServiceImpl implements ProductService {
                 new ArrayList<>(),
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
-                discountResponse != null ? discountResponse.getResult() : null
+                discountResponse != null ? discountResponse.getResult() : null,
+                BigDecimal.valueOf(0.00)
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponse);

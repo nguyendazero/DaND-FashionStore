@@ -11,7 +11,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Untree.co">
-    <link rel="shortcut icon" href="favicon.png">
 
     <meta name="description" content="" />
     <meta name="keywords" content="bootstrap, bootstrap4" />
@@ -65,14 +64,14 @@
             <!-- End Column 1 -->
 
             <!-- Start Column 2 -->
-            <div th:each="book, iterStat : ${books}" class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0" th:if="${iterStat.index < 3}">
-                <a class="product-item" th:href="@{/book/{id}(id=${book.id})}">
-                    <img th:src="@{${book.image}}" class="img-fluid product-thumbnail" style="height: 400px;">
-                    <h3 class="product-title" th:text="${book.name}" style="display: inline-block; width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></h3>
-                    <strong class="product-price" th:text="${book.price}" style="display: block; font-size: 1.2em; font-weight: bold; color: #ff6600;"></strong>
+            <div th:each="product, iterStat : ${products}" class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0" th:if="${iterStat.index < 3}">
+                <a class="product-item" th:href="@{/product/{id}(id=${product.id})}">
+                    <img th:src="@{${product.highLightedImageUrl}}" class="img-fluid product-thumbnail" style="height: 400px;">
+                    <h3 class="product-title" th:text="${product.name}" style="display: inline-block; width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></h3>
+                    <strong class="product-price" th:text="${product.lowestPrice}" style="display: block; font-size: 1.2em; font-weight: bold; color: #ff6600;"></strong>
                     <span class="icon-cross">
-					            <img src="/images/cross.svg" class="img-fluid">
-					        </span>
+                        <img src="/images/cross.svg" class="img-fluid">
+                    </span>
                 </a>
             </div>
 
@@ -161,19 +160,23 @@
     <div class="book-container" style="overflow: hidden;">
         <div class="wrapper" style="overflow: hidden; position: relative;">
             <ul class="carousel" style="display: flex; list-style: none; padding: 0; margin: 0; transition: transform 0.5s ease;">
-                <li th:each="book : ${booksOnSale}" class="card" style="background: #fff; border: 1px solid #ddd; margin: 0 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); flex: 0 0 auto; width: 200px;">
+                <li th:each="product : ${productsDiscount}" class="card" style="background: #fff; border: 1px solid #ddd; margin: 0 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); flex: 0 0 auto; width: 200px;">
                     <div class="img" style="position: relative;">
-                        <a th:href="@{/book/{id}(id=${book.id})}">
-                            <img th:src="@{${book.image}}" alt="Book Image" style="max-width: 100%; height: 260px; display: block;">
+                        <a th:href="@{/product/{id}(id=${product.id})}">
+                            <img th:src="@{${product.highLightedImageUrl}}" alt="Book Image" style="max-width: 100%; height: 260px; display: block;">
                         </a>
-                        <span class="badge" style="position: absolute; top: 10px; left: 10px; background: red; color: #fff; padding: 5px 10px; font-size: 12px;">50%</span>
+                        <span class="badge" style="position: absolute; top: 10px; left: 10px; background: red; color: #fff; padding: 5px 10px; font-size: 12px;" th:text="${product.discount.discountValue}">%</span>
                     </div>
-                    <h5 style="font-size: 16px; font-weight: bold; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block;" th:text="${book.name}"></h5>
-                    <span class="star" style="color: gold;"><i class="fa fa-star"></i> <span th:text="4"></span></span>
+                    <h5 style="font-size: 16px; font-weight: bold; margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block;" th:text="${product.name}"></h5>
+                    <span class="star" style="color: gold;"><i class="fa fa-star"></i> <span th:text="${product.rating}"></span></span>
                     <div class="footer" style="font-size: 5px; color: #555;">
                         <div class="price">
-                            <span style="margin-right: 5px;" th:text="${book.price}"></span>
-                            <span><strike style="color: #999;" th:text="${book.price * 2}"></strike></span>
+                            <span style="margin-right: 5px;" th:text="${product.lowestPrice != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : 0}"></span>
+                            <span>
+                               <strike style="color: #999;"
+                                       th:text="${product.lowestPrice}">
+                                </strike>
+                            </span>
                         </div>
                     </div>
                 </li>
@@ -248,7 +251,7 @@
 
                                         <div class="author-info">
                                             <div class="author-pic">
-                                                <img src="/images/person-1.png" alt="Maria Jones" class="img-fluid">
+                                                <img src="/images/person-1.jpg" alt="Maria Jones" class="img-fluid">
                                             </div>
                                             <h3 class="font-weight-bold">Maria Jones</h3>
                                             <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>
@@ -271,7 +274,7 @@
 
                                         <div class="author-info">
                                             <div class="author-pic">
-                                                <img src="/images/person-1.png" alt="Maria Jones" class="img-fluid">
+                                                <img src="/images/person-1.jpg" alt="Maria Jones" class="img-fluid">
                                             </div>
                                             <h3 class="font-weight-bold">Maria Jones</h3>
                                             <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>
@@ -294,7 +297,7 @@
 
                                         <div class="author-info">
                                             <div class="author-pic">
-                                                <img src="/images/person-1.png" alt="Maria Jones" class="img-fluid">
+                                                <img src="/images/person-1.jpg" alt="Maria Jones" class="img-fluid">
                                             </div>
                                             <h3 class="font-weight-bold">Maria Jones</h3>
                                             <span class="position d-block mb-3">CEO, Co-Founder, XYZ Inc.</span>

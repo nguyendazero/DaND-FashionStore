@@ -27,4 +27,5 @@ public class ItsRctProductResponse {
     private ItsRctStyleResponse style;
     // co the null
     private ItsRctDiscountResponse discount;
+    private BigDecimal lowestPrice;
 }
