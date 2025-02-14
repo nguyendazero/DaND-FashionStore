@@ -38,7 +38,7 @@ public class HomeController {
         APICustomize<List<ItsRctCollectionResponse>> collectionResponse = collectionService.collections();
         APICustomize<List<ItsRctProductResponse>> productDiscountResponse = productService.getDiscountedProducts();
         APICustomize<List<ItsRctProductResponse>> productResponse = productService.products(
-                null, null, null, null, null, null, null, null, null, null, 0, 10);
+                null, null, null, null, null, null, null, null, null, null,  null, 0, 10);
         
         model.addAttribute("products", productResponse.getResult());
         model.addAttribute("productsDiscount", productDiscountResponse.getResult());

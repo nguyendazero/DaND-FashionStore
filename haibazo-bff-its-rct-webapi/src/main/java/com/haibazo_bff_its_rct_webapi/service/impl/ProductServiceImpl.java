@@ -55,11 +55,11 @@ public class ProductServiceImpl implements ProductService {
     @SneakyThrows
     @Override
     @CircuitBreaker(name = "haibazo-bff-its-rct-webapi")
-    public APICustomize<List<ItsRctProductResponse>> products(String size, String color, BigDecimal minPrice, BigDecimal maxPrice, String style, String category, Collections collection, String name, String sortBy, String sortOrder, int pageIndex, int pageSize) {
+    public APICustomize<List<ItsRctProductResponse>> products(String size, String color, BigDecimal minPrice, BigDecimal maxPrice, String style, String category, Collections collection, String name, Boolean discount, String sortBy, String sortOrder, int pageIndex, int pageSize) {
 
         // Tạo khóa Redis dựa trên các tham số lọc
-        String redisKey = String.format("products:size=%s;color=%s;minPrice=%s;maxPrice=%s;style=%s;category=%s;collection=%s;name=%s;sortBy=%s;sortOrder=%s;pageIndex=%d;pageSize=%d",
-                size, color, minPrice, maxPrice, style, category, collection, name, sortBy, sortOrder, pageIndex, pageSize);
+        String redisKey = String.format("products:size=%s;color=%s;minPrice=%s;maxPrice=%s;style=%s;category=%s;collection=%s;name=%s;discount=%s;sortBy=%s;sortOrder=%s;pageIndex=%d;pageSize=%d",
+                size, color, minPrice, maxPrice, style, category, collection, name, discount, sortBy, sortOrder, pageIndex, pageSize);
 
         // Lấy dữ liệu từ Redis
         List<String> cachedData = redisService.getList(redisKey);
@@ -92,6 +92,7 @@ public class ProductServiceImpl implements ProductService {
                 .and(ProductSpecification.hasStyle(style))
                 .and(ProductSpecification.hasCollectionType(collection))
                 .and(ProductSpecification.hasName(name))
+                .and(ProductSpecification.hasDiscount(discount))
                 .and(ProductSpecification.sortBy(sortBy, sortOrder));
 
         // Sử dụng Pageable từ Spring Data

@@ -15,6 +15,21 @@ import java.util.Objects;
 
 public class ProductSpecification {
 
+    public static Specification<Product> hasDiscount(Boolean discount) {
+        return (root, query, criteriaBuilder) -> {
+            if (discount == null) {
+                return criteriaBuilder.conjunction();
+            }
+            if (discount) {
+                // Lọc các sản phẩm có discount không null
+                return criteriaBuilder.isNotNull(root.get("discount"));
+            } else {
+                // Lọc các sản phẩm không có discount
+                return criteriaBuilder.isNull(root.get("discount"));
+            }
+        };
+    }
+
     public static Specification<Product> hasName(String name) {
         return (root, query, criteriaBuilder) -> {
             if (name == null || name.isEmpty()) {

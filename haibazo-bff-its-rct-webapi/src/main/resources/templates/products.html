@@ -1,0 +1,138 @@
+<!-- /*
+* Bootstrap 5
+* Template Name: Furni
+* Template Author: Untree.co
+* Template URI: https://untree.co/
+* License: https://creativecommons.org/licenses/by/3.0/
+*/ -->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="author" content="Untree.co">
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <style>
+    .dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 0; /* required to remove the gap so it doesn't close */
+    }
+
+  </style>
+
+  <meta name="description" content="" />
+  <meta name="keywords" content="bootstrap, bootstrap4" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="/css/tiny-slider.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+  <title>Products</title>
+</head>
+
+<body>
+
+<!-- Start Header/Navigation -->
+<div th:replace="partials/header :: headerFragment"></div>
+<!-- End Header/Navigation -->
+
+<!-- Start Hero Section -->
+<div class="hero">
+  <div class="container">
+    <div class="row justify-content-between align-items-center">
+      <div class="col-lg-5">
+        <div class="intro-excerpt">
+          <h1>Shop</h1>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="d-flex justify-content-end">
+          <form method="get" th:action="@{/api/bff/its-rct/v1/ecommerce/public/product/products(name=${name})}" class="form-inline mr-2">
+            <div class="input-group">
+              <input type="text" name="name" class="form-control" th:placeholder="${name != null ? name : 'Tìm kiếm sản phẩm ...'}" aria-label="Tìm kiếm sản phẩm" aria-describedby="search-button" style="width: 400px;">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit" id="search-button">Tìm kiếm</button>
+              </div>
+            </div>
+          </form>
+          <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-left: 10px;">
+              Phân loại sản phẩm
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+              <a class="dropdown-item" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products(discount=${1})}" id="discount">Discount</a>
+              <a class="dropdown-item" th:each="style : ${styles}" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products(style=${style.name})}" th:text="${style.name}"></a>
+              <a class="dropdown-item" th:each="category : ${categories}" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products(category=${category.name})}" th:text="${category.name}"></a>
+            </div>
+          </div>
+        </div>
+
+        <form method="get" th:action="@{/api/bff/its-rct/v1/ecommerce/public/product/products(minPrice=${minPrice}, maxPrice=${maxPrice})}" class="mb-3" style="margin-top: 10px; margin-left: 6px;">
+          <div class="form-row">
+            <div class="col-md-4">
+              <input type="number" name="minPrice" class="form-control" placeholder="Giá tối thiểu" step="0.01" th:value="${minPrice}">
+            </div>
+            <div class="col-md-4">
+              <input type="number" name="maxPrice" class="form-control" placeholder="Giá tối đa" step="0.01" th:value="${maxPrice}">
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-success">Tìm kiếm</button>
+            </div>
+          </div>
+        </form>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End Hero Section -->
+
+
+
+<div class="untree_co-section product-section before-footer-section">
+  <div class="container">
+
+    <div class="row">
+
+      <!-- Hiển thị thông điệp lỗi nếu có -->
+      <div th:if="${errorMessage}" class="col-12">
+        <div class="alert alert-warning" role="alert">
+          <p th:text="${errorMessage}"></p>
+        </div>
+      </div>
+
+      <div th:if="${products != null and #lists.size(products) > 0}" th:each="product : ${products}" class="col-12 col-md-4 col-lg-3 mb-5">
+        <a class="product-item" th:href="@{/product/{id}(id=${product.id})}">
+          <img th:src="${product.highLightedImageUrl}" class="img-fluid product-thumbnail" style="height: 270px;">
+          <h3 class="product-title" th:text="${#strings.length(product.name) > 30 ? #strings.substring(product.name, 0, 30) + '...' : product.name}"></h3>
+          <strong class="product-price" th:text="${product.lowestPrice}" style="color: #ff6600;"></strong>
+          <span class="icon-cross" th:href="@{/cart/addCart/{id}(id=${product.id})}">
+            <img th:src="@{/images/cross.svg}" class="img-fluid">
+          </span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Start Footer Section -->
+<div th:replace="partials/footer :: footerFragment"></div>
+<!-- End Footer Section -->
+
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/tiny-slider.js"></script>
+<script src="/js/custom.js"></script>
+</body>
+
+</html>

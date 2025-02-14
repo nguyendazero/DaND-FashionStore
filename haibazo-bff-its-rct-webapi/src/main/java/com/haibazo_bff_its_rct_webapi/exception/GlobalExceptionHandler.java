@@ -1,16 +1,23 @@
 package com.haibazo_bff_its_rct_webapi.exception;
 
 import com.haibazo.bff.common.extension.exception.BadRequestException;
+import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.ErrorDetail;
 import com.haibazo_bff_its_rct_webapi.dto.ErrorResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCategoryResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctStyleResponse;
+import com.haibazo_bff_its_rct_webapi.service.CategoryService;
+import com.haibazo_bff_its_rct_webapi.service.StyleService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,12 +29,17 @@ public class GlobalExceptionHandler {
 
     private final Properties messages;
     private final String host = "ecommerce-service";
+    private final CategoryService categoryService;
+    private final StyleService styleService;
+
 
     public void loadMessages(InputStream input) throws IOException {
         messages.load(input);
     }
 
-    public GlobalExceptionHandler() throws IOException {
+    public GlobalExceptionHandler(CategoryService categoryService, StyleService styleService) throws IOException {
+        this.categoryService = categoryService;
+        this.styleService = styleService;
         messages = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages_vn_VN.properties")) {
             if (input != null) {
@@ -333,24 +345,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ListProductEmptyException.class)
-    public ResponseEntity<ErrorResponse> handleListProductEmptyException(HttpServletRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setStatusCode(HttpStatus.NOT_FOUND.value());
-        errorResponse.setTimestamp(LocalDateTime.now().toString());
-        errorResponse.setPath(request.getRequestURI());
-
-        List<ErrorDetail> errors = new ArrayList<>();
-
+    public String handleListProductEmptyException(Model model) {
         String errorKey = "LISTPRODUCTISEMPTY";
-        ErrorDetail errorDetail = new ErrorDetail();
-        errorDetail.setErrorCode("404");
-        errorDetail.setErrorMessageId(errorKey);
         String errorMessage = messages.getProperty(errorKey).replace("{0}", host);
-        errorDetail.setErrorMessage(errorMessage);
 
-        errors.add(errorDetail);
-        errorResponse.setErrors(errors);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        // Lấy danh sách danh mục và kiểu
+        APICustomize<List<ItsRctCategoryResponse>> categoryResponse = categoryService.categories();
+        APICustomize<List<ItsRctStyleResponse>> stylesResponse = styleService.styles();
+        model.addAttribute("categories", categoryResponse.getResult());
+        model.addAttribute("styles", stylesResponse.getResult());
+        model.addAttribute("errorMessage", errorMessage);
+        
+        return "products";
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ProductService {
 
-    public APICustomize<List<ItsRctProductResponse>> products(String size, String color, BigDecimal minPrice, BigDecimal maxPrice, String style, String category, Collections collection, String name, String sortBy, String sortOrder, int pageIndex, int pageSize);
+    public APICustomize<List<ItsRctProductResponse>> products(String size, String color, BigDecimal minPrice, BigDecimal maxPrice, String style, String category, Collections collection, String name, Boolean discount, String sortBy, String sortOrder, int pageIndex, int pageSize);
 
     public APICustomize<List<ItsRctProductResponse>> getDiscountedProducts();
     
