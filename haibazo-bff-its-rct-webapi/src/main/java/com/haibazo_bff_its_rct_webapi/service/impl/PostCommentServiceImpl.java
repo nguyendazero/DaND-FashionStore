@@ -40,7 +40,7 @@ public class PostCommentServiceImpl implements PostCommentService {
         // Lấy JWT từ header
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = null;
-        Long haibazoAccountId; // Khai báo biến haibazoAccountId
+        Long haibazoAccountId;
 
         if (token != null) {
             haibazoAccountId = tokenUtil.getHaibazoAccountIdFromToken(token);
@@ -57,7 +57,7 @@ public class PostCommentServiceImpl implements PostCommentService {
         // Nếu người dùng đã đăng nhập, sử dụng thông tin của họ
         if (userResponse != null) {
             User user = userRepository.findByHaibazoAccountId(haibazoAccountId)
-                    .orElseThrow(() -> new ResourceNotFoundException("User", "haitibaAccountId", haibazoAccountId.toString()));
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "haibazoAccountId", haibazoAccountId.toString()));
             postComment.setUser(user);
         } else {
             // Nếu chưa xác thực, tạo UserTemp

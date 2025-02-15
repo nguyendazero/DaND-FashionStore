@@ -7,12 +7,14 @@ import com.haibazo_bff_its_rct_webapi.service.PostCommentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
 
-@RestController
+@Controller
 @Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/bff/its-rct/v1/ecommerce")
@@ -21,11 +23,13 @@ public class PostCommentController {
     private final PostCommentService postCommentService;
 
     @PostMapping("/public/post-comment")
-    public ResponseEntity<?> create(@RequestParam Long postId, @RequestBody AddPostCommentRequest request, HttpServletRequest httpRequest) {
+    public RedirectView create(@RequestParam Long postId, @ModelAttribute AddPostCommentRequest request, HttpServletRequest httpRequest) {
         // Lấy header Authorization từ yêu cầu
         String authorizationHeader = httpRequest.getHeader("Authorization");
         APICustomize<ItsRctPostCommentResponse> response = postCommentService.add(postId, request, authorizationHeader);
-        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+        
+        String redirectUrl = "http://localhost:8386/api/bff/its-rct/v1/ecommerce/public/post/" + postId;
+        return new RedirectView(redirectUrl);
     }
 
     @GetMapping("/public/post-comment/post-comments")

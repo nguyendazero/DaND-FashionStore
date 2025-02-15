@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${post.name}">Post Detail</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="/css/tiny-slider.css" rel="stylesheet">
+    <link href="/css/posts.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Start Header/Navigation -->
+<div th:replace="partials/header :: headerFragment"></div>
+<!-- End Header/Navigation -->
+
+<div class="container" style="margin-top: 90px;">
+    <div class="row">
+        <!-- Post Header -->
+        <div class="col-md-6">
+            <div class="post-header">
+                <img th:src="${post.imageUrl}" alt="Post Image" class="img-fluid"
+                     style="width: 100%; height: auto; max-height: 400px;">
+                <h1 th:text="${post.name}" style="font-size: 28px; margin-top: 15px;"></h1>
+                <p class="post-meta" style="font-size: 16px; color: #777; margin-bottom: 10px;">
+                    <span th:text="${post.category.name}">Category</span> |
+                    <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy')}">Date</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Post Content -->
+        <div class="col-md-6">
+            <div class="post-content" th:text="${post.content}"
+                 style="font-size: 18px; line-height: 1.6; color: #555; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); text-align: justify;">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Tags Section -->
+    <div class="tags-section" style="margin-top: 20px;">
+        <h4 style="font-weight: bold; color: #333;">Tags:</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div th:each="tag : ${tags}"
+                 style="border: 1px solid #007bff; border-radius: 5px; padding: 5px 10px; background-color: #e7f0ff; color: #007bff;">
+                <span th:text="${tag.name}"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" style="margin-top: 40px;">
+        <h2 style="font-size: 24px; color: #333;">Comments</h2>
+
+        <!-- Comment Form -->
+        <form action="#" th:action="@{/api/bff/its-rct/v1/ecommerce/public/post-comment(postId=${post.id})}" method="post" style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                <div class="comment-avatar" style="margin-right: 15px;">
+                    <img src="/images/userTemp.png" alt="Avatar" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #007bff;">
+                </div>
+                <div style="flex-grow: 1;">
+                <textarea name="content" rows="3" placeholder="Write your comment here..." required
+                          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                </div>
+            </div>
+
+            <!-- Fields for temporary user -->
+            <div>
+                <input type="text" name="fullName" placeholder="Your Name" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                <input type="email" name="email" placeholder="Your Email" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+            </div>
+
+            <div>
+                <button type="submit" style="padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    Submit Comment
+                </button>
+            </div>
+        </form>
+
+        <div th:if="${postComments.size() == 0}">
+            <p>No comments yet. Be the first to comment!</p>
+        </div>
+
+        <div th:each="comment : ${postComments}" class="comment-item"
+             style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; align-items: flex-start;">
+            <div class="comment-avatar" style="margin-right: 15px;">
+                <img th:src="${comment.user != null && comment.user.avatarUrl != null ? comment.user.avatarUrl : '/images/userTemp.png'}"
+                     alt="Avatar" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #007bff;">
+            </div>
+            <div class="comment-content" style="flex-grow: 1;">
+                <p class="comment-date" th:text="${#temporals.format(comment.createdAt, 'dd MMM yyyy HH:mm')}"
+                   style="font-size: 12px; color: red; margin: 0;">
+                    Comment Date
+                </p>
+                <p class="comment-user"
+                   th:text="${comment.user != null ? comment.user.fullName : comment.userTemp.fullName}"
+                   style="font-weight: bold; font-size: 18px; color: #007bff; margin: 0;">
+                    Commenter Name
+                </p>
+                <p class="comment-text" th:text="${comment.content}" style="color: #555; margin: 0;"></p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Start Footer Section -->
+<div th:replace="partials/footer :: footerFragment"></div>
+<!-- End Footer Section -->
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/tiny-slider.js"></script>
+<script src="/js/custom.js"></script>
+
+</body>
+</html>

@@ -4,10 +4,12 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddPostRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCategoryResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctPostResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctTagResponse;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
 import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
 import com.haibazo_bff_its_rct_webapi.model.Category;
 import com.haibazo_bff_its_rct_webapi.model.Post;
+import com.haibazo_bff_its_rct_webapi.model.Tag;
 import com.haibazo_bff_its_rct_webapi.repository.CategoryRepository;
 import com.haibazo_bff_its_rct_webapi.repository.PostRepository;
 import com.haibazo_bff_its_rct_webapi.service.CategoryService;
@@ -22,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -155,5 +158,20 @@ public class PostServiceImpl implements PostService {
         postRepository.delete(post);
 
         return new APICustomize<>(ApiError.NO_CONTENT.getCode(), ApiError.NO_CONTENT.getMessage(), "Successfully deleted post with id = " + post.getId());
+    }
+
+    @Override
+    public APICustomize<List<ItsRctTagResponse>> getTagsByPostId(Long id) {
+
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id.toString()));
+        
+        List<ItsRctTagResponse> tagsResponse = post.getPostTags().stream()
+                .map(postTag -> {
+                    Tag tag = postTag.getTag();
+                    return new ItsRctTagResponse(tag.getId(), tag.getName(), tag.getCreatedAt(), tag.getUpdatedAt());
+                }) .toList();
+        
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), tagsResponse);
     }
 }

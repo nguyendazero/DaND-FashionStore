@@ -8,84 +8,86 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="author" content="Untree.co">
-  <meta name="description" content="" />
-  <meta name="keywords" content="bootstrap, bootstrap4" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Untree.co">
+    <meta name="description" content=""/>
+    <meta name="keywords" content="bootstrap, bootstrap4"/>
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="/css/tiny-slider.css" rel="stylesheet">
+    <link href="/css/posts.css" rel="stylesheet">
+    <title>Posts</title>
+</head>
 
-		<!-- Bootstrap CSS -->
-		<link href="/css/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-		<link href="/css/tiny-slider.css" rel="stylesheet">
-		<link href="/css/posts.css" rel="stylesheet">
-		<title>Posts</title>
-	</head>
+<body>
+<!-- Start Header/Navigation -->
+<div th:replace="partials/header :: headerFragment"></div>
+<!-- End Header/Navigation -->
 
-	<body>
+<!-- Start Hero Section -->
+<div class="hero">
+    <div class="container">
+        <div class="row justify-content-between">
+            <div class="col-lg-5">
+                <div class="intro-excerpt">
+                    <h1>Blog</h1>
+                    <p class="mb-4">Donec vitae odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam
+                        vulputate velit imperdiet dolor tempor tristique.</p>
+                    <p><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}"
+                          class="btn btn-secondary me-2">Shop Now</a><a href="#"
+                                                                        class="btn btn-white-outline">Explore</a></p>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="hero-img-wrap">
 
-	<!-- Start Header/Navigation -->
-	<div th:replace="partials/header :: headerFragment"></div>
-	<!-- End Header/Navigation -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Hero Section -->
 
-		<!-- Start Hero Section -->
-			<div class="hero">
-				<div class="container">
-					<div class="row justify-content-between">
-						<div class="col-lg-5">
-							<div class="intro-excerpt">
-								<h1>Blog</h1>
-								<p class="mb-4">Donec vitae odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam vulputate velit imperdiet dolor tempor tristique.</p>
-								<p><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" class="btn btn-secondary me-2">Shop Now</a><a href="#" class="btn btn-white-outline">Explore</a></p>
-							</div>
-						</div>
-						<div class="col-lg-7">
-							<div class="hero-img-wrap">
 
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		<!-- End Hero Section -->
+<!-- Start Blog Section -->
+<div class="blog-section">
+    <div class="container">
+        <div class="row">
 
-		
+            <div th:each="post : ${posts}" class="col-12 col-sm-6 col-md-4 mb-5">
+                <div class="post-entry">
+                    <a th:href="@{/api/bff/its-rct/v1/ecommerce/public/post/{id}(id=${post.id})}"
+                       class="post-thumbnail">
+                        <img th:src="@{${post.imageUrl}}" alt="Image" class="img-fluid">
+                    </a>
+                    <div class="post-content-entry">
+                        <h3>
+                            <a th:href="@{/api/bff/its-rct/v1/ecommerce/public/post/{id}(id=${post.id})}"
+                               th:text="${post.name}"></a>
+                        </h3>
+                        <div class="meta">
+                            <span>in <a th:text="${post.category.name}"></a></span>
+                            <span>on <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy')}"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-		<!-- Start Blog Section -->
-		<div class="blog-section">
-			<div class="container">
-				<div class="row">
-					
-					<div th:each="post : ${posts}" class="col-12 col-sm-6 col-md-4 mb-5">
-						<div class="post-entry">
-							<a th:href="@{/api/bff/its-rct/v1/ecommerce/public/post/{id}(id=${post.id})}" class="post-thumbnail">
-								<img th:src="@{${post.imageUrl}}" alt="Image" class="img-fluid">
-							</a>
-							<div class="post-content-entry">
-								<h3>
-									<a th:href="@{/api/bff/its-rct/v1/ecommerce/public/post/{id}(id=${post.id})}" th:text="${post.name}"></a>
-								</h3>
-								<div class="meta">
-									<span>in <a th:text="${post.category.name}"></a></span>
-									<span>on <span th:text="${#temporals.format(post.createdAt, 'MMM dd, yyyy')}"></span></span>
-								</div>
-							</div>
-						</div>
-					</div>
-					
-				</div>
-			</div>
-		</div>
-		<!-- End Blog Section -->	
+        </div>
+    </div>
+</div>
+<!-- End Blog Section -->
 
-	
-	<!-- Start Footer Section -->
-	<div th:replace="partials/footer :: footerFragment"></div>
-	<!-- End Footer Section -->
-		
-		<script src="/js/bootstrap.bundle.min.js"></script>
-		<script src="/js/tiny-slider.js"></script>
-		<script src="/js/custom.js"></script>
-	</body>
+
+<!-- Start Footer Section -->
+<div th:replace="partials/footer :: footerFragment"></div>
+<!-- End Footer Section -->
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/tiny-slider.js"></script>
+<script src="/js/custom.js"></script>
+</body>
 
 </html>
