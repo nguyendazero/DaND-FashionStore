@@ -29,7 +29,7 @@
                 <div class="intro-excerpt">
                     <h1>Modern and quality NayzakShop<span class="d-block"></span></h1>
                     <p class="mb-4">Bringing customers wonderful experiences of shopping for fashion.</p>
-                    <p><a href="#" class="btn btn-secondary me-2">Shop Now</a><a href="#" class="btn btn-white-outline">Explore</a></p>
+                    <p><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" class="btn btn-secondary me-2">Shop Now</a><a href="#" class="btn btn-white-outline">Explore</a></p>
                 </div>
             </div>
             <div class="col-lg-7">
@@ -267,7 +267,7 @@
                 <h2 class="section-title">Recent Blog</h2>
             </div>
             <div class="col-md-6 text-start text-md-end">
-                <a href="#" class="more">View All Posts</a>
+                <a th:href="@{/api/bff/its-rct/v1/ecommerce/public/post/posts}" class="more">View All Posts</a>
             </div>
         </div>
         <div class="row" th:if="${posts != null and !posts.isEmpty()}">
