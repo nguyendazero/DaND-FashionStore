@@ -148,7 +148,9 @@ public class ProductServiceImpl implements ProductService {
                     categoryResponse.getResult(),
                     styleResponse.getResult(),
                     discountResponse != null ? discountResponse.getResult() : null,
-                    lowestPrice
+                    lowestPrice,
+                    product.getCreatedAt(),
+                    product.getUpdatedAt()
             );
 
             productResponses.add(productResponse);
@@ -221,7 +223,9 @@ public class ProductServiceImpl implements ProductService {
                     categoryResponse.getResult(),
                     styleResponse.getResult(),
                     discountResponse != null ? discountResponse.getResult() : null,
-                    lowestPrice
+                    lowestPrice,
+                    product.getCreatedAt(),
+                    product.getUpdatedAt()
             );
 
             productResponses.add(productResponse);
@@ -280,7 +284,9 @@ public class ProductServiceImpl implements ProductService {
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
                 discountResponse != null ? discountResponse.getResult() : null,
-                lowestPrice
+                lowestPrice,
+                product.getCreatedAt(),
+                product.getUpdatedAt()
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponse);
@@ -383,7 +389,9 @@ public class ProductServiceImpl implements ProductService {
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
                 discountResponse != null ? discountResponse.getResult() : null,
-                BigDecimal.valueOf(0.00)
+                BigDecimal.valueOf(0.00),
+                savedProduct.getCreatedAt(),
+                savedProduct.getUpdatedAt()
         );
 
         return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), productResponse);
@@ -535,7 +543,9 @@ public class ProductServiceImpl implements ProductService {
                 categoryResponse.getResult(),
                 styleResponse.getResult(),
                 discountResponse != null ? discountResponse.getResult() : null,
-                BigDecimal.valueOf(0.00)
+                BigDecimal.valueOf(0.00),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponse);

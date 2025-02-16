@@ -2,14 +2,12 @@ package com.haibazo_bff_its_rct_webapi.controller;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddProductRequest;
-import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCategoryResponse;
-import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctProductResponse;
-import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctStyleResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.*;
 import com.haibazo_bff_its_rct_webapi.enums.Collections;
+import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.exception.ListProductEmptyException;
-import com.haibazo_bff_its_rct_webapi.service.CategoryService;
-import com.haibazo_bff_its_rct_webapi.service.ProductService;
-import com.haibazo_bff_its_rct_webapi.service.StyleService;
+import com.haibazo_bff_its_rct_webapi.model.Review;
+import com.haibazo_bff_its_rct_webapi.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,6 +27,8 @@ public class ProductController {
     private final ProductService productService;
     private final CategoryService categoryService;
     private final StyleService styleService;
+    private final ImageService imageService;
+    private final ReviewService reviewService;
 
     @GetMapping("/public/product/products")
     public String products(
@@ -59,10 +59,17 @@ public class ProductController {
         return "products";
     }
 
-    @GetMapping("/public/product")
-    public ResponseEntity<?> product(@RequestParam Long id){
-        APICustomize<ItsRctProductResponse> response = productService.getProductById(id);
-        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    @GetMapping("/public/product/{id}")
+    public String product(@PathVariable Long id, Model model){
+        
+        APICustomize<ItsRctProductResponse> productResponse = productService.getProductById(id);
+        APICustomize<List<ItsRctReviewResponse>> reviewResponse = reviewService.reviews(id);
+        APICustomize<List<ItsRctImageResponse>> imageResponse = imageService.getImages(id, EntityType.PRODUCT);
+        model.addAttribute("product", productResponse.getResult());
+        model.addAttribute("reviews", reviewResponse.getResult());
+        model.addAttribute("images", imageResponse.getResult());
+        
+        return "product-detail";
     }
 
     @PostMapping("/admin/product")

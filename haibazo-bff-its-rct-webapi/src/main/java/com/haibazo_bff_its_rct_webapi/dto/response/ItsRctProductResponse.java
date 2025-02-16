@@ -14,7 +14,7 @@ import java.util.List;
 public class ItsRctProductResponse {
     private Long id;
     private String name;
-    private String weigh;
+    private String weight;
     private BigDecimal rating;
     private long viewCount;
     private String sortDescription;
@@ -28,4 +28,6 @@ public class ItsRctProductResponse {
     // co the null
     private ItsRctDiscountResponse discount;
     private BigDecimal lowestPrice;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -56,7 +56,7 @@
 
             <!-- Start Column 2 -->
             <div th:each="product, iterStat : ${products}" class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0" th:if="${iterStat.index < 3}">
-                <a class="product-item" th:href="@{/product/{id}(id=${product.id})}">
+                <a class="product-item" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/{id}(id=${product.id})}">
                     <img th:src="@{${product.highLightedImageUrl}}" class="img-fluid product-thumbnail" style="height: 400px;">
                     <h3 class="product-title" th:text="${product.name}" style="display: inline-block; width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></h3>
                     <strong class="product-price" th:text="${product.lowestPrice}" style="display: block; font-size: 1.2em; font-weight: bold; color: #ff6600;"></strong>
@@ -132,7 +132,7 @@
 </div>
 <!-- End Why Choose Us Section -->
 
-<!-- Book On Sale -->
+<!-- Product On Sale -->
 <section class="book-sale" style="padding: 20px;">
     <div class="heading" style="display: flex; justify-content: space-between; align-items: center;">
         <div class="col-lg-7 mx-auto">
@@ -148,7 +148,7 @@
             <ul class="carousel" style="display: flex; list-style: none; padding: 0; margin: 0; transition: transform 0.5s ease;">
                 <li th:each="product : ${productsDiscount}" class="card" style="background: #fff; border: 1px solid #ddd; margin: 0 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); flex: 0 0 auto; width: 200px;">
                     <div class="img" style="position: relative;">
-                        <a th:href="@{/product/{id}(id=${product.id})}">
+                        <a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/{id}(id=${product.id})}">
                             <img th:src="@{${product.highLightedImageUrl}}" alt="Book Image" style="max-width: 100%; height: 260px; display: block;">
                         </a>
                         <span class="badge" style="position: absolute; top: 10px; left: 10px; background: red; color: #fff; padding: 5px 10px; font-size: 12px;" th:text="${product.discount.discountValue}">%</span>

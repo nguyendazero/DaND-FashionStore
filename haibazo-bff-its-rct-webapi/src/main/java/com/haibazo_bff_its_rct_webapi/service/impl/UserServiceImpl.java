@@ -196,7 +196,9 @@ public class UserServiceImpl implements UserService {
                     categoryResponse.getResult(),
                     styleResponse.getResult(),
                     discountResponse != null ? discountResponse.getResult() : null,
-                    lowestPrice
+                    lowestPrice,
+                    product.getCreatedAt(),
+                    product.getUpdatedAt()
             );
 
             productResponses.add(productResponse);

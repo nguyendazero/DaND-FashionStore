@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Untree.co">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="keywords" content="bootstrap, bootstrap4"/>
+
+    <!-- Bootstrap CSS -->
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/tiny-slider.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <link href="/css/book-filter.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+          rel="stylesheet"/>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+    <title>Product Detail</title>
+</head>
+<body style="background-color: white;">
+<!-- Start Header/Navigation -->
+<div th:replace="partials/header :: headerFragment"></div>
+<!-- End Header/Navigation -->
+
+<div class="breadcrumb-container">
+    <ul class="breadcrumb">
+        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/home}">Home</a></li>
+        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" style="color: #6c5dd4">Books</a></li>
+        <li><a th:text="${product.name}"></a></li>
+    </ul>
+</div>
+
+<section class="book-overview">
+    <div class="img">
+        <img th:src="@{${product.highLightedImageUrl}}" alt=""/>
+    </div>
+    <div class="book-content">
+        <h4 th:text="${product.name}"></h4>
+        <div class="meta">
+            <div class="review">
+                <div class="rating" style="display: flex; align-items: center;">
+                    <!-- Hiển thị ngôi sao vàng chỉ nếu có rating -->
+                    <div th:if="${product.rating != null && product.rating.compareTo(0) > 0}"
+                         th:each="i : ${#numbers.sequence(1, product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue())}"
+                         style="margin-right: 2px;">
+                        <i class="fa-solid fa-star" style="color: #f39c12;"></i>
+                    </div>
+                    <!-- Hiển thị ngôi sao xám nếu có rating -->
+                    <div th:if="${product.rating != null}"
+                         th:each="i : ${#numbers.sequence(product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue() + 1, 5)}"
+                         style="margin-right: 2px;">
+                        <i class="fa-solid fa-star" style="color: #ddd;"></i>
+                    </div>
+                </div>
+
+                <div class="comment-like">
+                    <small>
+                        <img th:src="@{/images/comment.png}" alt="Comments"/>
+                        <span th:text="${#strings.length(product.rating.toPlainString())}"></span> Reviews
+                    </small>
+                    <small>
+                        <img th:src="@{/images/like.png}" alt="Likes"/>
+                        <span th:text="${product.viewCount}"></span>Likes
+                    </small>
+                </div>
+            </div>
+            <div class="social-btn">
+                <a href=""><i class="fa-brands fa-facebook-f"></i>Facebook</a>
+                <a href=""><i class="fa-brands fa-twitter"></i>Twitter</a>
+                <a href=""><i class="fa-brands fa-whatsapp"></i>Whatsapp</a>
+                <a href=""><i class="fa-regular fa-envelope"></i>Email</a>
+            </div>
+        </div>
+        <p th:text="${product.description}"></p>
+
+        <div class="footer">
+            <div class="author-detail">
+                <div class="author">
+                    <small>Category</small>
+                    <strong th:text="${product.category.name}"></strong>
+                </div>
+                <div class="publisher">
+                    <small>Style</small>
+                    <strong th:text="${product.style.name}"></strong>
+                </div>
+                <div class="year">
+                    <small>Year</small>
+                    <strong th:text="${#temporals.format(product.createdAt, 'yyyy')}"></strong>
+                </div>
+            </div>
+            <div class="badge">
+                <span><i class="fa-solid fa-bolt-lightning"></i>free shipping</span>
+                <span><i class="fa-solid fa-shield"></i>in stocks</span>
+            </div>
+        </div>
+        <div class="book-price">
+            <div class="price">
+                <strong th:text="${product.discount != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : product.lowestPrice}"></strong>đ
+                <strike th:text="${product.lowestPrice}"></strike>
+                <span th:text="${product.discount != null ? product.discount.discountValue : 0} + '%'"></span> off
+            </div>
+            <div class="input-group">
+                <div class="offer-bottom">
+                    <div>
+                        <form th:if="${product.introduction != 'runout'}"
+                              th:action="@{/cart/addToCart/{id}(id=${product.id})}" method="post">
+                            <button type="submit" class="cartbtn"
+                                    style="background-color: #3b5d50; color: white; border: none; padding: 5px 10px; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; border-radius: 5px; transition: background-color 0.3s;">
+                                <i class="fa-solid fa-cart-shopping"></i> Add to cart
+                            </button>
+                        </form>
+                        <button th:if="${product.introduction == 'runout'}" class="cartbtn"
+                                style="background-color: #999; color: white; border: none; padding: 5px 10px; font-size: 16px; display: inline-flex; align-items: center; border-radius: 5px; cursor: not-allowed;">
+                            Đã hết hàng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="book-info" style="margin-bottom: 80px">
+    <div class="detail-customer">
+        <div class="tabbtns">
+            <button class="tablink" data-tab="detail">Details Product</button>
+            <button class="tablink" data-tab="customer">Customer Reviews</button>
+        </div>
+        <div class="book-detail tabcontent" id="detail">
+            <div class="detail-line">
+                <strong>Book Title:</strong> <span th:text="${product.name}"></span>
+            </div>
+            <div class="detail-line">
+                <strong>Category:</strong> <span th:if="${product.category != null}" th:text="${product.category.name}"></span>
+            </div>
+            <div class="detail-line">
+                <strong>Style:</strong> <span th:if="${product.style != null}" th:text="${product.style.name}"></span>
+            </div>
+            <div class="detail-line">
+                <strong>Date Published:</strong> <span><span th:text="${#temporals.format(product.createdAt, 'dd MMM yyyy')}"></span></span>
+            </div>
+            <div class="detail-line">
+                <strong>Weight:</strong> <span><span th:text="${product.weight}"></span></span>
+            </div>
+            <div class="detail-line">
+                <strong>Edition Language:</strong> <span>English</span>
+            </div>
+            <div class="detail-line tag-line">
+                <strong>Tags:</strong>
+                <div class="tags">
+                    <span>Drama</span>
+                    <span>Adventure</span>
+                    <span>Survival</span>
+                    <span>Biography</span>
+                    <span>Bestseller</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="customer-review tabcontent" id="customer">
+            <div class="rating">
+                <div class="rating-info">
+                    <h5>Rating Information</h5>
+                </div>
+                <strong style="display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                    <span th:text="${product.rating}"></span>
+                    <span style="margin: 0 5px;">out</span>
+                    <span>of 5</span>
+                </strong>
+                <div class="stars-container"
+                     style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+                    <div class="stars" style="display: flex; align-items: center;">
+                        <div th:if="${product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue() > 0}"
+                             style="display: flex; align-items: center;">
+                            <div th:each="i : ${#numbers.sequence(1, product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue())}"
+                                 style="margin-right: 2px;">
+                                <i class="fa-solid fa-star" style="color: #f39c12;"></i>
+                            </div>
+                        </div>
+                        <div th:if="${product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue() < 5}"
+                             style="display: flex; align-items: center;">
+                            <div th:each="i : ${#numbers.sequence(product.rating.setScale(0, T(java.math.RoundingMode).HALF_UP).intValue() + 1, 5)}"
+                                 style="margin-right: 2px;">
+                                <i class="fa-solid fa-star" style="color: #ddd;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 th:if="${error}" style="color: red;" th:text="${error}"></h4>
+            <h2 style="color: #a65c5c;" th:if="${message}" th:text="${message}"></h2>
+
+            <form th:action="@{/rating/add/{id}(id=${product.id})}" method="post" class="review-form">
+                <input type="hidden" name="bookId" th:value="${product.id}"/>
+                <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="rating" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Your
+                            Rating</label>
+                        <div id="star-rating" class="star-rating" data-rating="0"
+                             style="display: flex; font-size: 1.5em; color: #d3d3d3; cursor: pointer;">
+                            <i class="fa-solid fa-star" data-value="1"></i>
+                            <i class="fa-solid fa-star" data-value="2"></i>
+                            <i class="fa-solid fa-star" data-value="3"></i>
+                            <i class="fa-solid fa-star" data-value="4"></i>
+                            <i class="fa-solid fa-star" data-value="5"></i>
+                        </div>
+                        <input type="hidden" id="rating" name="stars" value="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <textarea id="content" name="content" class="form-control" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2 mb-2">Submit Review</button>
+            </form>
+
+            <div class="reviews"
+                 style="padding: 10px; background-color: #f9f9f9; border-radius: 10px; border: 1px solid #ddd;">
+                <h3 style="margin-bottom: 20px; font-size: 24px; font-weight: bold; color: #333;">Customer Reviews</h3>
+                <div class="review-item" th:each="review : ${reviews}"
+                     style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff;">
+                    <div class="review-content">
+                        <div class="review-header" style="margin-bottom: 10px; justify-content: space-between;">
+                            <strong th:if="${review.user != null}" th:text="${review.user.fullName}"
+                                    style="font-size: 16px; color: red; margin-right: 10px;">Anonymous</strong>
+                            <span th:if="${review.createdAt != null}"
+                                  th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}"
+                                  style="font-size: 14px; color: #888;"></span>
+                        </div>
+                        <div class="review-body">
+                            <div class="rating" style="margin-bottom: 10px;">
+                                <i class="fa-solid fa-star"
+                                   th:each="i : ${#numbers.sequence(1, review.stars.intValue())}"
+                                   style="color: #f39c12; font-size: 20px; margin-right: 2px;"></i>
+                            </div>
+                            <p th:text="${review.content}" style="font-size: 15px; color: #555;"></p>
+                        </div>
+                        <div class="review-actions"
+                             style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                            <form th:action="@{/rating/addDelLike/{id}(id=${review.id})}" method="post"
+                                  style="display: inline;">
+                                <button class="btn btn-primary btn-sm">Like</button>
+                            </form>
+                            <button class="btn btn-warning btn-sm">Edit</button>
+                            <form th:action="@{/rating/delete/{id}(id=${review.id})}" method="post"
+                                  style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to delete this review?');">Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Function to open a specific tab
+        function openTab(tabName) {
+            var tabcontent = document.querySelectorAll(".tabcontent");
+            var tablinks = document.querySelectorAll(".tablink");
+
+            tabcontent.forEach(content => {
+                content.style.display = "none";
+            });
+            tablinks.forEach(link => {
+                link.classList.remove("active");
+            });
+
+            document.getElementById(tabName).style.display = "block";
+            document.querySelector(`.tablink[data-tab="${tabName}"]`).classList.add("active");
+        }
+
+        // Initialize first tab as active
+        openTab("detail");
+
+        // Add click event listeners to tab links
+        document.querySelectorAll(".tablink").forEach(tab => {
+            tab.addEventListener("click", function() {
+                var tabName = this.getAttribute("data-tab");
+                openTab(tabName);
+            });
+        });
+
+        // Rating stars functionality
+        const stars = document.querySelectorAll("#star-rating .fa-star");
+        const ratingInput = document.getElementById("rating");
+
+        stars.forEach(star => {
+            star.addEventListener("mouseover", function() {
+                const value = parseInt(this.getAttribute("data-value"));
+                updateStars(value, 'hover');
+            });
+
+            star.addEventListener("mouseout", function() {
+                const value = parseInt(ratingInput.value);
+                updateStars(value, 'selected');
+            });
+
+            star.addEventListener("click", function() {
+                const value = parseInt(this.getAttribute("data-value"));
+                ratingInput.value = value;
+                updateStars(value, 'selected');
+            });
+        });
+
+        function updateStars(value, action) {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute("data-value"));
+                star.style.color = (starValue <= value) ? '#f7d106' : '#d3d3d3';
+            });
+        }
+    });
+</script>
+
+<!-- Start Footer Section -->
+<div th:replace="partials/footer :: footerFragment"></div>
+<!-- End Footer Section -->
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="/js/script.js"></script>
+
+</body>
+</html>
