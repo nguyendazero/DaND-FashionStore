@@ -29,6 +29,7 @@ public class ProductController {
     private final StyleService styleService;
     private final ImageService imageService;
     private final ReviewService reviewService;
+    private final QuestionService questionService;
 
     @GetMapping("/public/product/products")
     public String products(
@@ -65,8 +66,10 @@ public class ProductController {
         APICustomize<ItsRctProductResponse> productResponse = productService.getProductById(id);
         APICustomize<List<ItsRctReviewResponse>> reviewResponse = reviewService.reviews(id);
         APICustomize<List<ItsRctImageResponse>> imageResponse = imageService.getImages(id, EntityType.PRODUCT);
+        APICustomize<List<ItsRctQuestionResponse>> questionResponse = questionService.questionsByProduct(id);
         model.addAttribute("product", productResponse.getResult());
         model.addAttribute("reviews", reviewResponse.getResult());
+        model.addAttribute("questions", questionResponse.getResult());
         model.addAttribute("images", imageResponse.getResult());
         
         return "product-detail";

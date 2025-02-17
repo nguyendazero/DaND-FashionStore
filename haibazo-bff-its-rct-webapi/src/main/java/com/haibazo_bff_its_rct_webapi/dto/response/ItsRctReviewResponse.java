@@ -1,7 +1,5 @@
 package com.haibazo_bff_its_rct_webapi.dto.response;
 
-import com.haibazo_bff_its_rct_webapi.model.User;
-import com.haibazo_bff_its_rct_webapi.model.UserTemp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -157,9 +157,7 @@ public class QuestionServiceImpl implements QuestionService {
                             )).toList();
 
                     // Lấy thông tin người dùng từ ItsRctUserResponse
-                    ItsRctUserResponse userResponse = (question.getUser() != null)
-                            ? tokenUtil.getUserByHaibazoAccountId(question.getUser().getHaibazoAccountId())
-                            : null;
+                    ItsRctUserResponse userResponse = tokenUtil.getUserByHaibazoAccountId(question.getUser().getHaibazoAccountId());
                     
                     return new ItsRctQuestionResponse(
                             question.getId(),

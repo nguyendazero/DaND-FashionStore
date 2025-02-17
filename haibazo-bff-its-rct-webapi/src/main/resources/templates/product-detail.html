@@ -10,7 +10,6 @@
     <meta name="keywords" content="bootstrap, bootstrap4"/>
 
     <!-- Bootstrap CSS -->
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/tiny-slider.css" rel="stylesheet">
@@ -136,19 +135,23 @@
         <div class="tabbtns">
             <button class="tablink" data-tab="detail">Details Product</button>
             <button class="tablink" data-tab="customer">Customer Reviews</button>
+            <button class="tablink" data-tab="question">Question</button>
         </div>
+
         <div class="book-detail tabcontent" id="detail">
             <div class="detail-line">
                 <strong>Book Title:</strong> <span th:text="${product.name}"></span>
             </div>
             <div class="detail-line">
-                <strong>Category:</strong> <span th:if="${product.category != null}" th:text="${product.category.name}"></span>
+                <strong>Category:</strong> <span th:if="${product.category != null}"
+                                                 th:text="${product.category.name}"></span>
             </div>
             <div class="detail-line">
                 <strong>Style:</strong> <span th:if="${product.style != null}" th:text="${product.style.name}"></span>
             </div>
             <div class="detail-line">
-                <strong>Date Published:</strong> <span><span th:text="${#temporals.format(product.createdAt, 'dd MMM yyyy')}"></span></span>
+                <strong>Date Published:</strong> <span><span
+                    th:text="${#temporals.format(product.createdAt, 'dd MMM yyyy')}"></span></span>
             </div>
             <div class="detail-line">
                 <strong>Weight:</strong> <span><span th:text="${product.weight}"></span></span>
@@ -170,9 +173,6 @@
 
         <div class="customer-review tabcontent" id="customer">
             <div class="rating">
-                <div class="rating-info">
-                    <h5>Rating Information</h5>
-                </div>
                 <strong style="display: flex; align-items: center; justify-content: center; font-size: 20px;">
                     <span th:text="${product.rating}"></span>
                     <span style="margin: 0 5px;">out</span>
@@ -206,7 +206,7 @@
                 <input type="hidden" name="bookId" th:value="${product.id}"/>
                 <div class="form-group">
                     <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="rating" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Your
+                        <label for="rating" style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 20px;">Your
                             Rating</label>
                         <div id="star-rating" class="star-rating" data-rating="0"
                              style="display: flex; font-size: 1.5em; color: #d3d3d3; cursor: pointer;">
@@ -229,30 +229,34 @@
                  style="padding: 10px; background-color: #f9f9f9; border-radius: 10px; border: 1px solid #ddd;">
                 <h3 style="margin-bottom: 20px; font-size: 24px; font-weight: bold; color: #333;">Customer Reviews</h3>
                 <div class="review-item" th:each="review : ${reviews}"
-                     style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff;">
+                     style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                     <div class="review-content">
-                        <div class="review-header" style="margin-bottom: 10px; justify-content: space-between;">
-                            <strong th:if="${review.user != null}" th:text="${review.user.fullName}"
-                                    style="font-size: 16px; color: red; margin-right: 10px;">Anonymous</strong>
+                        <div class="review-header"
+                             style="margin-bottom: 10px; display: flex; align-items: center;">
+                            <img th:src="${review.user.avatar != null ? review.user.avatar : '/images/userTemp.png'}"
+                                 alt="User Avatar"
+                                 style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;"/>
+                            <strong th:text="${review.user.fullName}"
+                                    style="font-size: 16px; color: red; margin-right: 10px;"></strong>
                             <span th:if="${review.createdAt != null}"
                                   th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}"
-                                  style="font-size: 14px; color: #888;"></span>
+                                  style="font-size: 14px; color: #888; margin-left: auto;"></span>
                         </div>
                         <div class="review-body">
-                            <div class="rating" style="margin-bottom: 10px;">
+                            <div class="rating">
                                 <i class="fa-solid fa-star"
                                    th:each="i : ${#numbers.sequence(1, review.stars.intValue())}"
                                    style="color: #f39c12; font-size: 20px; margin-right: 2px;"></i>
                             </div>
                             <p th:text="${review.content}" style="font-size: 15px; color: #555;"></p>
                         </div>
-                        <div class="review-actions"
-                             style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-                            <form th:action="@{/rating/addDelLike/{id}(id=${review.id})}" method="post"
-                                  style="display: inline;">
-                                <button class="btn btn-primary btn-sm">Like</button>
-                            </form>
-                            <button class="btn btn-warning btn-sm">Edit</button>
+                        <div class="review-images" style="margin-top: 10px; display: flex; flex-wrap: wrap;">
+                            <span th:if="${review.images != null}" th:each="image : ${review.images}">
+                                <img th:src="${image.imageUrl}" alt="Image"
+                                     style="width: 150px; height: auto; margin-right: 5px; border-radius: 4px;"/>
+                            </span>
+                        </div>
+                        <div class="review-actions" style="margin-top: 10px; display: flex; justify-content: flex-end;">
                             <form th:action="@{/rating/delete/{id}(id=${review.id})}" method="post"
                                   style="display: inline;">
                                 <button type="submit" class="btn btn-danger btn-sm"
@@ -264,77 +268,57 @@
                 </div>
             </div>
         </div>
+
+        <div class="question tabcontent" id="question" style="display: none;"> <!-- Nội dung cho Question -->
+            <div class="question-item" th:each="question : ${questions}"
+                 style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                <div class="question-content">
+                    <div class="question-header"
+                         style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center;">
+                            <img th:src="${question.user != null ? question.user.avatar : '/images/userTemp.png'}"
+                                 alt="User Avatar"
+                                 style="width: 40px; height: 40px; border-radius: 50%; margin-right: 5px;"/>
+                            <strong th:text="${question.user != null ? question.user.fullName : question.userTemp.fullName}"
+                                    style="font-size: 18px; color: #e74c3c; font-weight: bold;"></strong>
+                        </div>
+                        <span th:if="${question.createdAt != null}"
+                              th:text="${#temporals.format(question.createdAt, 'yyyy-MM-dd HH:mm')}"
+                              style="font-size: 14px; color: #888;"></span>
+                    </div>
+                    <div class="question-body">
+                        <p th:text="${question.content}" style="font-size: 16px; color: #333; line-height: 1.5;"></p>
+                    </div>
+                    <div class="question-images" style="margin-top: 10px; display: flex; flex-wrap: wrap;">
+                        <span th:if="${question.images != null}" th:each="image : ${question.images}">
+                            <img th:src="${image.imageUrl}" alt="Image"
+                                 style="width: 150px; height: auto; margin-right: 5px; border-radius: 4px;"/>
+                        </span>
+                    </div>
+                    <div class="question-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-primary btn-sm" onclick="openAnswerModal(${question.id});">Answer</button>
+                        <form th:action="@{/question/delete/{id}(id=${question.id})}" method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure you want to delete this question?');">Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Function to open a specific tab
-        function openTab(tabName) {
-            var tabcontent = document.querySelectorAll(".tabcontent");
-            var tablinks = document.querySelectorAll(".tablink");
-
-            tabcontent.forEach(content => {
-                content.style.display = "none";
-            });
-            tablinks.forEach(link => {
-                link.classList.remove("active");
-            });
-
-            document.getElementById(tabName).style.display = "block";
-            document.querySelector(`.tablink[data-tab="${tabName}"]`).classList.add("active");
-        }
-
-        // Initialize first tab as active
-        openTab("detail");
-
-        // Add click event listeners to tab links
-        document.querySelectorAll(".tablink").forEach(tab => {
-            tab.addEventListener("click", function() {
-                var tabName = this.getAttribute("data-tab");
-                openTab(tabName);
-            });
-        });
-
-        // Rating stars functionality
-        const stars = document.querySelectorAll("#star-rating .fa-star");
-        const ratingInput = document.getElementById("rating");
-
-        stars.forEach(star => {
-            star.addEventListener("mouseover", function() {
-                const value = parseInt(this.getAttribute("data-value"));
-                updateStars(value, 'hover');
-            });
-
-            star.addEventListener("mouseout", function() {
-                const value = parseInt(ratingInput.value);
-                updateStars(value, 'selected');
-            });
-
-            star.addEventListener("click", function() {
-                const value = parseInt(this.getAttribute("data-value"));
-                ratingInput.value = value;
-                updateStars(value, 'selected');
-            });
-        });
-
-        function updateStars(value, action) {
-            stars.forEach(star => {
-                const starValue = parseInt(star.getAttribute("data-value"));
-                star.style.color = (starValue <= value) ? '#f7d106' : '#d3d3d3';
-            });
-        }
-    });
-</script>
 
 <!-- Start Footer Section -->
 <div th:replace="partials/footer :: footerFragment"></div>
 <!-- End Footer Section -->
 
-<!-- Bootstrap Bundle with Popper -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <!-- Custom JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="/js/script.js"></script>
+<script src="/js/change-tag.js"></script>
 
 </body>
 </html>
