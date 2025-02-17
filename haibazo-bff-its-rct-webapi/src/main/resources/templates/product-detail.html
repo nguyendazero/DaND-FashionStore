@@ -44,6 +44,14 @@
     <div class="img">
         <img th:src="@{${product.highLightedImageUrl}}" alt=""/>
     </div>
+
+    <!-- Danh sách ảnh sản phẩm -->
+    <div class="product-images" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
+        <span th:each="image : ${images}">
+            <img th:src="${image.imageUrl}" alt="Product Image" style="width: 80px; height: auto; border-radius: 4px;"/>
+        </span>
+    </div>
+
     <div class="book-content">
         <h4 th:text="${product.name}"></h4>
         <div class="meta">
@@ -70,7 +78,7 @@
                     </small>
                     <small>
                         <img th:src="@{/images/like.png}" alt="Likes"/>
-                        <span th:text="${product.viewCount}"></span>Likes
+                        <span th:text="${product.viewCount}"></span> Likes
                     </small>
                 </div>
             </div>
