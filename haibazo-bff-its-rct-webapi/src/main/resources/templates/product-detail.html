@@ -14,7 +14,7 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/tiny-slider.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
-    <link href="/css/book-filter.css" rel="stylesheet">
+    <link href="/css/product-filter.css" rel="stylesheet">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -35,7 +35,7 @@
 <div class="breadcrumb-container">
     <ul class="breadcrumb">
         <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/home}">Home</a></li>
-        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" style="color: #6c5dd4">Books</a></li>
+        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" style="color: #6c5dd4">Products</a></li>
         <li><a th:text="${product.name}"></a></li>
     </ul>
 </div>
@@ -134,13 +134,13 @@
     <div class="detail-customer">
         <div class="tabbtns">
             <button class="tablink" data-tab="detail">Details Product</button>
-            <button class="tablink" data-tab="customer">Customer Reviews</button>
-            <button class="tablink" data-tab="question">Question</button>
+            <button class="tablink" data-tab="customer">Reviews</button>
+            <button class="tablink" data-tab="question">Questions</button>
         </div>
 
         <div class="book-detail tabcontent" id="detail">
             <div class="detail-line">
-                <strong>Book Title:</strong> <span th:text="${product.name}"></span>
+                <strong>Product Title:</strong> <span th:text="${product.name}"></span>
             </div>
             <div class="detail-line">
                 <strong>Category:</strong> <span th:if="${product.category != null}"
@@ -203,10 +203,11 @@
             <h2 style="color: #a65c5c;" th:if="${message}" th:text="${message}"></h2>
 
             <form th:action="@{/rating/add/{id}(id=${product.id})}" method="post" class="review-form">
-                <input type="hidden" name="bookId" th:value="${product.id}"/>
+                <input type="hidden" name="productId" th:value="${product.id}"/>
                 <div class="form-group">
                     <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="rating" style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 20px;">Your
+                        <label for="rating"
+                               style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 20px;">Your
                             Rating</label>
                         <div id="star-rating" class="star-rating" data-rating="0"
                              style="display: flex; font-size: 1.5em; color: #d3d3d3; cursor: pointer;">
@@ -253,13 +254,13 @@
                         <div class="review-images" style="margin-top: 10px; display: flex; flex-wrap: wrap;">
                             <span th:if="${review.images != null}" th:each="image : ${review.images}">
                                 <img th:src="${image.imageUrl}" alt="Image"
-                                     style="width: 150px; height: auto; margin-right: 5px; border-radius: 4px;"/>
+                                     style="width: 150px; height: auto; margin-right: 27px; border-radius: 4px;"/>
                             </span>
                         </div>
                         <div class="review-actions" style="margin-top: 10px; display: flex; justify-content: flex-end;">
                             <form th:action="@{/rating/delete/{id}(id=${review.id})}" method="post"
                                   style="display: inline;">
-                                <button type="submit" class="btn btn-danger btn-sm"
+                                <button type="submit" class="btn-sm" style="color: white; background-color: #dc3545; border: none; border-radius: 4px; padding: 5px 20px; cursor: pointer; transition: background-color 0.3s;"
                                         onclick="return confirm('Are you sure you want to delete this review?');">Delete
                                 </button>
                             </form>
@@ -292,17 +293,53 @@
                     <div class="question-images" style="margin-top: 10px; display: flex; flex-wrap: wrap;">
                         <span th:if="${question.images != null}" th:each="image : ${question.images}">
                             <img th:src="${image.imageUrl}" alt="Image"
-                                 style="width: 150px; height: auto; margin-right: 5px; border-radius: 4px;"/>
+                                 style="width: 150px; height: auto; margin-right: 27px; border-radius: 4px;"/>
                         </span>
                     </div>
-                    <div class="question-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
-                        <button class="btn btn-primary btn-sm" onclick="openAnswerModal(${question.id});">Answer</button>
+                    <div class="question-actions"
+                         style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-sm"
+                                style="color: white; background-color: #28a745; border: none; border-radius: 4px; padding: 10px 15px; cursor: pointer; transition: background-color 0.3s;"
+                                onclick="openAnswerModal(${question.id});">Answer
+                        </button>
                         <form th:action="@{/question/delete/{id}(id=${question.id})}" method="post"
                               style="display: inline;">
-                            <button type="submit" class="btn btn-danger btn-sm"
+                            <button type="submit" class="btn btn-sm"
+                                    style="color: white; background-color: #dc3545; border: none; border-radius: 4px; padding: 10px 15px; cursor: pointer; transition: background-color 0.3s;"
                                     onclick="return confirm('Are you sure you want to delete this question?');">Delete
                             </button>
                         </form>
+                    </div>
+                    <!-- Hiển thị các câu trả lời -->
+                    <div class="answers" style="margin-top: 15px; padding-left: 60px;">
+                        <span th:if="${not #lists.isEmpty(question.answers)}">
+                            <h4 style="font-size: 18px; color: #333; font-weight: bold; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Answers:</h4>
+                        </span>
+                        <div th:each="answer : ${question.answers}"
+                             style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                            <div class="answer-content"
+                                 style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1; display: flex; align-items: center;">
+                                    <img th:src="${answer.user.avatar}" alt="User Avatar"
+                                         style="width: 30px; height: 30px; border-radius: 50%; margin-right: 5px;"/>
+                                    <strong th:text="${answer.user.fullName}"
+                                            style="font-size: 14px; color: #007bff;"></strong>
+                                    <p th:text="${answer.content}"
+                                       style="font-size: 15px; color: #555; line-height: 1.5; margin-left: 10px;"></p>
+                                </div>
+                                <div style="margin-left: 10px;">
+                                    <form th:action="@{/answer/delete/{id}(id=${answer.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm"
+                                                style="color: white; background-color: #c82333; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; transition: background-color 0.3s;"
+                                                onclick="return confirm('Are you sure you want to delete this answer?');">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <span th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}"
+                                  style="font-size: 12px; color: #888;"></span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -98,7 +98,7 @@ public class AnswerServiceImpl implements AnswerService {
                 answer.getId(),
                 answer.getContent(),
                 answer.getQuestion().getId(),
-                tokenUtil.getUserByHaibazoAccountId(answer.getUser().getHaibazoAccountId()),
+                answer.getUser().getId(),
                 answer.getCreatedAt(),
                 answer.getUpdatedAt()
         )).toList();

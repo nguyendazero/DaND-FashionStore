@@ -18,6 +18,7 @@ public class ItsRctQuestionResponse {
     private Long productId;
     private String content;
     private List<ItsRctImageResponse> images;
+    private List<ItsRctAnswerResponse> answers;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

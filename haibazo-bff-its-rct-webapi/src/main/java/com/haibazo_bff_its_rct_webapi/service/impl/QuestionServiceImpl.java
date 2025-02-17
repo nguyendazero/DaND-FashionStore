@@ -2,6 +2,7 @@ package com.haibazo_bff_its_rct_webapi.service.impl;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddQuestionRequest;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctAnswerResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctImageResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctQuestionResponse;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctUserResponse;
@@ -128,6 +129,7 @@ public class QuestionServiceImpl implements QuestionService {
                 savedQuestion.getProduct().getId(),
                 savedQuestion.getContent(),
                 imageResponses,
+                new ArrayList<>(),
                 savedQuestion.getCreatedAt(),
                 savedQuestion.getUpdatedAt()
         );
@@ -146,7 +148,6 @@ public class QuestionServiceImpl implements QuestionService {
                 .map(question -> {
                     // Lấy danh sách hình ảnh liên quan đến câu hỏi
                     List<Image> images = imageRepository.findByEntityIdAndEntityType(question.getId(), EntityType.QUESTION);
-
                     // Chuyển đổi hình ảnh thành ItsRctImageResponse
                     List<ItsRctImageResponse> imageResponses = images.stream()
                             .map(image -> new ItsRctImageResponse(
@@ -160,7 +161,18 @@ public class QuestionServiceImpl implements QuestionService {
                     ItsRctUserResponse userResponse = (question.getUser() != null)
                             ? tokenUtil.getUserByHaibazoAccountId(question.getUser().getHaibazoAccountId())
                             : null;
-                    
+
+                    // Lấy danh sách trả về của question
+                    List<ItsRctAnswerResponse> answerResponses = question.getAnswers().stream()
+                            .map(answer -> new ItsRctAnswerResponse(
+                                    answer.getId(),
+                                    answer.getContent(),
+                                    question.getId(),
+                                    tokenUtil.getUserByHaibazoAccountId(answer.getUser().getHaibazoAccountId()),
+                                    answer.getCreatedAt(),
+                                    answer.getUpdatedAt()
+                            )).toList();
+
                     return new ItsRctQuestionResponse(
                             question.getId(),
                             userResponse,
@@ -168,6 +180,7 @@ public class QuestionServiceImpl implements QuestionService {
                             question.getProduct().getId(),
                             question.getContent(),
                             imageResponses,
+                            answerResponses,
                             question.getCreatedAt(),
                             question.getUpdatedAt()
                     );
@@ -198,6 +211,17 @@ public class QuestionServiceImpl implements QuestionService {
         ItsRctUserResponse userResponse = (question.getUser() != null)
                 ? tokenUtil.getUserByHaibazoAccountId(question.getUser().getHaibazoAccountId())
                 : null;
+
+        // Lấy danh sách trả về của question
+        List<ItsRctAnswerResponse> answerResponses = question.getAnswers().stream()
+                .map(answer -> new ItsRctAnswerResponse(
+                        answer.getId(),
+                        answer.getContent(),
+                        question.getId(),
+                        tokenUtil.getUserByHaibazoAccountId(answer.getUser().getHaibazoAccountId()),
+                        answer.getCreatedAt(),
+                        answer.getUpdatedAt()
+                )).toList();
         
         // Tạo phản hồi
         ItsRctQuestionResponse response = new ItsRctQuestionResponse(
@@ -207,6 +231,7 @@ public class QuestionServiceImpl implements QuestionService {
                 question.getProduct().getId(),
                 question.getContent(),
                 imageResponses,
+                answerResponses,
                 question.getCreatedAt(),
                 question.getUpdatedAt()
         );

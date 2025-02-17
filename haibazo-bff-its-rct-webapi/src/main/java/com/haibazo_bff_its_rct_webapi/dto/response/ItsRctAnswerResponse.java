@@ -13,7 +13,7 @@ public class ItsRctAnswerResponse {
     private Long id;
     private String content;
     private Long questionId;
-    private Long userId;
+    private ItsRctUserResponse user;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
