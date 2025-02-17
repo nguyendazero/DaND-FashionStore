@@ -323,9 +323,9 @@
                                     <img th:src="${answer.user.avatar}" alt="User Avatar"
                                          style="width: 30px; height: 30px; border-radius: 50%; margin-right: 5px;"/>
                                     <strong th:text="${answer.user.fullName}"
-                                            style="font-size: 14px; color: #007bff;"></strong>
+                                            style="font-size: 14px; color: #007bff; margin-right: -15px; margin-top: -15px"></strong>
                                     <p th:text="${answer.content}"
-                                       style="font-size: 15px; color: #555; line-height: 1.5; margin-left: 10px;"></p>
+                                       style="font-size: 15px; color: #555; line-height: 1.5; margin-left: -75px; margin-bottom: -2rem; margin-top: -12px"></p>
                                 </div>
                                 <div style="margin-left: 10px;">
                                     <form th:action="@{/answer/delete/{id}(id=${answer.id})}" method="post" style="display: inline;">
