@@ -62,10 +62,12 @@ public class ProductController {
     public String product(@PathVariable Long id, Model model){
         
         APICustomize<ItsRctProductResponse> productResponse = productService.getProductById(id);
+        APICustomize<List<ItsRctProductVariantResponse>> productVariantResponse = productService.findVariantsByProductId(id);
         APICustomize<List<ItsRctReviewResponse>> reviewResponse = reviewService.reviews(id);
         APICustomize<List<ItsRctImageResponse>> imageResponse = imageService.getImages(id, EntityType.PRODUCT);
         APICustomize<List<ItsRctQuestionResponse>> questionResponse = questionService.questionsByProduct(id);
         model.addAttribute("product", productResponse.getResult());
+        model.addAttribute("variants", productVariantResponse.getResult());
         model.addAttribute("reviews", reviewResponse.getResult());
         model.addAttribute("questions", questionResponse.getResult());
         model.addAttribute("images", imageResponse.getResult());

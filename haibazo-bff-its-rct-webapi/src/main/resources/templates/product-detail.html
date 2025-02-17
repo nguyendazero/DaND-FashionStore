@@ -35,7 +35,8 @@
 <div class="breadcrumb-container">
     <ul class="breadcrumb">
         <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/home}">Home</a></li>
-        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" style="color: #6c5dd4">Products</a></li>
+        <li><a th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}" style="color: #6c5dd4">Products</a>
+        </li>
         <li><a th:text="${product.name}"></a></li>
     </ul>
 </div>
@@ -77,7 +78,7 @@
                         <span th:text="${#strings.length(product.rating.toPlainString())}"></span> Reviews
                     </small>
                     <small>
-                        <img th:src="@{/images/like.png}" alt="Likes"/>
+                        <img th:src="@{/images/eye.svg}" alt="Likes"/>
                         <span th:text="${product.viewCount}"></span> Likes
                     </small>
                 </div>
@@ -111,6 +112,39 @@
                 <span><i class="fa-solid fa-shield"></i>in stocks</span>
             </div>
         </div>
+
+        <div class="variants" style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between;">
+                <!-- Cột Size -->
+                <div class="size-options" style="flex: 1;">
+                    <h6 style="font-size: 1.2em; font-weight: bold; color: #333; text-transform: uppercase;">
+                        Size:
+                    </h6>
+                    <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span th:each="variant : ${#sets.toSet(variants)}"
+                      th:if="${variant.variantKey == 'Size'}"
+                      style="border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
+                    <strong th:text="${variant.value}"></strong>
+                </span>
+                    </div>
+                </div>
+
+                <!-- Cột Color -->
+                <div class="color-options" style="flex: 1;">
+                    <h6 style="font-size: 1.2em; font-weight: bold; color: #333; text-transform: uppercase;">
+                        Color:
+                    </h6>
+                    <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <span th:each="variant : ${#sets.toSet(variants)}"
+                      th:if="${variant.variantKey == 'Color'}"
+                      style="border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
+                    <strong th:text="${variant.value}"></strong>
+                </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="book-price">
             <div class="price">
                 <strong th:text="${product.discount != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : product.lowestPrice}"></strong>đ
@@ -268,7 +302,8 @@
                         <div class="review-actions" style="margin-top: 10px; display: flex; justify-content: flex-end;">
                             <form th:action="@{/rating/delete/{id}(id=${review.id})}" method="post"
                                   style="display: inline;">
-                                <button type="submit" class="btn-sm" style="color: white; background-color: #dc3545; border: none; border-radius: 4px; padding: 5px 20px; cursor: pointer; transition: background-color 0.3s;"
+                                <button type="submit" class="btn-sm"
+                                        style="color: white; background-color: #dc3545; border: none; border-radius: 4px; padding: 5px 20px; cursor: pointer; transition: background-color 0.3s;"
                                         onclick="return confirm('Are you sure you want to delete this review?');">Delete
                                 </button>
                             </form>
@@ -336,7 +371,8 @@
                                        style="font-size: 15px; color: #555; line-height: 1.5; margin-left: -75px; margin-bottom: -2rem; margin-top: -12px"></p>
                                 </div>
                                 <div style="margin-left: 10px;">
-                                    <form th:action="@{/answer/delete/{id}(id=${answer.id})}" method="post" style="display: inline;">
+                                    <form th:action="@{/answer/delete/{id}(id=${answer.id})}" method="post"
+                                          style="display: inline;">
                                         <button type="submit" class="btn btn-sm"
                                                 style="color: white; background-color: #c82333; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; transition: background-color 0.3s;"
                                                 onclick="return confirm('Are you sure you want to delete this answer?');">

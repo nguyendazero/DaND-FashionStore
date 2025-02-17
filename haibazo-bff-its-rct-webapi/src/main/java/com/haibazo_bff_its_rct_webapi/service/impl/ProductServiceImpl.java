@@ -31,11 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-
+    
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryService categoryService;
@@ -46,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
     private final ImageService imageService;
     private final ImageRepository imageRepository;
     private final ReviewRepository reviewRepository;
+    private final ProductAvailableVariantRepository productAvailableVariantRepository;
     private final ProductAvailableVariantService productAvailableVariantService;
     private final StyleRepository styleRepository;
     private final StyleService styleService;
@@ -549,5 +551,21 @@ public class ProductServiceImpl implements ProductService {
         );
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), productResponse);
+    }
+
+    @Override
+    public APICustomize<List<ItsRctProductVariantResponse>> findVariantsByProductId(Long id) {
+        List<ItsRctProductVariantResponse> variants = productAvailableVariantRepository.findByProductId(id)
+                .stream()
+                .flatMap(variant -> variant.getProductVariants().stream())
+                .map(variant -> new ItsRctProductVariantResponse(
+                        variant.getVariantGroupKey().getName(), 
+                        variant.getValue()
+                ))
+                .toList();
+
+        System.out.println("variants: " + variants);
+        // Tạo và trả về APICustomize
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), variants);
     }
 }

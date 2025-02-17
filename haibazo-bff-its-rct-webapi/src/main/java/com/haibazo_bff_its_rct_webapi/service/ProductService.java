@@ -3,6 +3,7 @@ package com.haibazo_bff_its_rct_webapi.service;
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.AddProductRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctProductResponse;
+import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctProductVariantResponse;
 import com.haibazo_bff_its_rct_webapi.enums.Collections;
 
 import java.math.BigDecimal;
@@ -21,4 +22,6 @@ public interface ProductService {
     public APICustomize<String> deleteProduct(Long productId);
 
     public APICustomize<ItsRctProductResponse> updateProduct(Long productId, AddProductRequest request);
+
+    public APICustomize<List<ItsRctProductVariantResponse>> findVariantsByProductId(Long id);
 }
