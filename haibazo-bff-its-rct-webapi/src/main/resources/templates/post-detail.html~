@@ -72,7 +72,7 @@
                 </div>
 
             <!-- Kiểm tra trạng thái đăng nhập -->
-            <span th:if="${false}"> <!-- Luôn hiển thị form cho userTemp -->
+            <span th:if="${true}"> <!-- Luôn hiển thị form cho userTemp -->
         <input type="text" name="fullName" placeholder="Your Name" required
                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
         <input type="email" name="email" placeholder="Your Email" required

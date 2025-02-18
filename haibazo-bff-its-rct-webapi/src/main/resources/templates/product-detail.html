@@ -313,7 +313,33 @@
             </div>
         </div>
 
-        <div class="question tabcontent" id="question" style="display: none;"> <!-- Nội dung cho Question -->
+        <div class="question tabcontent" id="question" style="display: none;">
+            <!-- Phần nhập câu hỏi -->
+            <div class="ask-question" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+                <h6 style="font-size: 18px; color: #333; font-weight: bold;">Ask a Question:</h6>
+                <form th:action="@{/question/add}" method="post">
+                    <div style="margin-bottom: 10px;">
+                        <!-- Kiểm tra điều kiện người dùng đã đăng nhập hay chưa -->
+                        <span th:if="${false}"> <!-- Tạm thời luôn hiển thị form cho userTemp -->
+                    <textarea name="content" rows="4" placeholder="Enter your question"
+                              style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"></textarea>
+                </span>
+                        <span th:if="${true}"> <!-- Tạm thời không hiển thị -->
+                    <input type="text" name="fullName" placeholder="Full Name"
+                           style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-right: 5%;"/>
+                    <input type="email" name="email" placeholder="Email"
+                           style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"/>
+                    <textarea name="content" rows="4" placeholder="Enter your question"
+                              style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></textarea>
+                </span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        Submit Question
+                    </button>
+                </form>
+            </div>
+
+            <!-- Danh sách câu hỏi -->
             <div class="question-item" th:each="question : ${questions}"
                  style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
                 <div class="question-content">
@@ -334,10 +360,10 @@
                         <p th:text="${question.content}" style="font-size: 16px; color: #333; line-height: 1.5;"></p>
                     </div>
                     <div class="question-images" style="margin-top: 10px; display: flex; flex-wrap: wrap;">
-                        <span th:if="${question.images != null}" th:each="image : ${question.images}">
-                            <img th:src="${image.imageUrl}" alt="Image"
-                                 style="width: 150px; height: auto; margin-right: 27px; border-radius: 4px;"/>
-                        </span>
+                <span th:if="${question.images != null}" th:each="image : ${question.images}">
+                    <img th:src="${image.imageUrl}" alt="Image"
+                         style="width: 150px; height: auto; margin-right: 27px; border-radius: 4px;"/>
+                </span>
                     </div>
                     <div class="question-actions"
                          style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -355,9 +381,9 @@
                     </div>
                     <!-- Hiển thị các câu trả lời -->
                     <div class="answers" style="margin-top: 15px; padding-left: 60px;">
-                        <span th:if="${not #lists.isEmpty(question.answers)}">
-                            <h4 style="font-size: 18px; color: #333; font-weight: bold; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Answers:</h4>
-                        </span>
+                <span th:if="${not #lists.isEmpty(question.answers)}">
+                    <h4 style="font-size: 18px; color: #333; font-weight: bold; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Answers:</h4>
+                </span>
                         <div th:each="answer : ${question.answers}"
                              style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
                             <div class="answer-content"
