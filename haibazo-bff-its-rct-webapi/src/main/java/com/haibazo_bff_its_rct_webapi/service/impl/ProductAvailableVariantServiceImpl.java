@@ -150,4 +150,23 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
     public APICustomize<String> delete(Long id) {
         return null;
     }
+
+    @Override
+    public APICustomize<List<ItsRctProductAvailableVariantResponse>> findByVariantValue(String value) {
+
+        List<ProductAvailableVariant> variants = productAvailableVariantRepository.findByProductVariantValue(value);
+        List<ItsRctProductAvailableVariantResponse> response = variants.stream()
+                .map(variant -> new ItsRctProductAvailableVariantResponse(
+                        variant.getId(),
+                        variant.getHighLightedImageUrl(),
+                        variant.getPrice(),
+                        variant.getStock(),
+                        variant.getProduct().getId(),
+                        null,
+                        null
+                )).toList();
+
+        return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), response);
+    };
+    
 }

@@ -135,15 +135,20 @@
                         Color:
                     </h6>
                     <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <span th:each="variant : ${#sets.toSet(variants)}"
-                      th:if="${variant.variantKey == 'Color'}"
-                      style="border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
-                    <strong th:text="${variant.value}"></strong>
-                </span>
+                        <span th:each="variant : ${#sets.toSet(variants)}"
+                              th:if="${variant.variantKey == 'Color'}"
+                              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
+                              th:data-value="${variant.value}"
+                              onclick="fetchProductAvailableVariant(this)">
+                              <strong th:text="${variant.value}"></strong>
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Kết quả sẽ hiển thị ở đây -->
+        <div id="variant-result"></div>
 
         <div class="book-price">
             <div class="price">
@@ -417,6 +422,29 @@
 
     </div>
 </section>
+
+<script>
+    function fetchProductAvailableVariant(element) {
+        let value = element.getAttribute("data-value");
+        let url = `/api/bff/its-rct/v1/ecommerce/public/product-available-variant/value/${value}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.result && data.result.length > 0) {
+                    let output = "<h3>Kết quả tìm kiếm:</h3><ul>";
+                    data.result.forEach(variant => {
+                        output += `<li>ID: ${variant.id}, Giá: ${variant.price}, Tồn kho: ${variant.stock}</li>`;
+                    });
+                    output += "</ul>";
+                    document.getElementById("variant-result").innerHTML = output;
+                } else {
+                    document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
+                }
+            })
+            .catch(error => console.error("Lỗi khi gọi API:", error));
+    }
+</script>
 
 <!-- Start Footer Section -->
 <div th:replace="partials/footer :: footerFragment"></div>
