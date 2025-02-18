@@ -18,6 +18,6 @@ public interface ProductAvailableVariantService {
 
     public APICustomize<String> delete(Long id);
 
-    public APICustomize<List<ItsRctProductAvailableVariantResponse>> findByVariantValueAndProductId(String value, Long productId) ;
+    public APICustomize<ItsRctProductAvailableVariantResponse> findByColorAndSizeAndProductId(String color, String size, Long productId);
 
 }

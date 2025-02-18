@@ -11,7 +11,13 @@ public interface ProductAvailableVariantRepository extends JpaRepository<Product
 
     List<ProductAvailableVariant> findByProductId(Long productId);
 
-    @Query("SELECT pav FROM ProductAvailableVariant pav JOIN pav.productVariants pv WHERE pv.value = :value AND pav.product.id = :productId")
-    List<ProductAvailableVariant> findByProductVariantValueAndProductId(@Param("value") String value, @Param("productId") Long productId);
-
+    @Query("SELECT pav FROM ProductAvailableVariant pav " +
+            "JOIN pav.productVariants pvColor " +
+            "JOIN pav.productVariants pvSize " +
+            "WHERE pvColor.value = :color " +
+            "AND pvColor.variantGroupKey.variantKey = 'color' " +
+            "AND pvSize.value = :size " +
+            "AND pvSize.variantGroupKey.variantKey = 'size' " +
+            "AND pav.product.id = :productId")
+    ProductAvailableVariant findByColorAndSizeAndProductId(@Param("color") String color, @Param("size") String size, @Param("productId") Long productId);
 }

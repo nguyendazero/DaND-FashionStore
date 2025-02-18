@@ -115,17 +115,20 @@
 
         <div class="variants" style="margin-top: 15px;">
             <div style="display: flex; justify-content: space-between;">
+
                 <!-- Cột Size -->
                 <div class="size-options" style="flex: 1;">
                     <h6 style="font-size: 1.2em; font-weight: bold; color: #333; text-transform: uppercase;">
                         Size:
                     </h6>
                     <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                <span th:each="variant : ${#sets.toSet(variants)}"
-                      th:if="${variant.variantKey == 'Size'}"
-                      style="border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
-                    <strong th:text="${variant.value}"></strong>
-                </span>
+        <span th:each="variant : ${#sets.toSet(variants)}"
+              th:if="${variant.variantKey == 'Size'}"
+              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
+              th:data-value="${variant.value}"
+              th:attr="onclick='selectSize(this, &quot;' + ${variant.value} + '&quot;)'">
+            <strong th:text="${variant.value}"></strong>
+        </span>
                     </div>
                 </div>
 
@@ -135,15 +138,16 @@
                         Color:
                     </h6>
                     <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        <span th:each="variant : ${#sets.toSet(variants)}"
-                              th:if="${variant.variantKey == 'Color'}"
-                              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
-                              th:data-value="${variant.value}"
-                              th:attr="onclick='fetchProductAvailableVariant(this, ' + ${product.id} + ')'">
-      <strong th:text="${variant.value}"></strong>
-</span>
+        <span th:each="variant : ${#sets.toSet(variants)}"
+              th:if="${variant.variantKey == 'Color'}"
+              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
+              th:data-value="${variant.value}"
+              th:attr="onclick='selectColor(this, &quot;' + ${variant.value} + '&quot;)'">
+            <strong th:text="${variant.value}"></strong>
+        </span>
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -424,27 +428,44 @@
 </section>
 
 <script>
-    function fetchProductAvailableVariant(element, productId) {
-    let value = element.getAttribute("data-value");
-    let url = `/api/bff/its-rct/v1/ecommerce/public/product-available-variant/value/${value}/product/${productId}`;
+    let selectedColor = null;
+    let selectedSize = null;
+    const productId = window.location.pathname.split('/').pop();
 
-    console.log("Calling API at:", url); // Kiểm tra URL
+    function fetchProductAvailableVariant() {
+        if (selectedColor && selectedSize) {
+            const url = `/api/bff/its-rct/v1/ecommerce/public/product-available-variant/color/${selectedColor}/size/${selectedSize}/product/${productId}`;
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.result && data.result.length > 0) {
-                let output = "<h3>Kết quả tìm kiếm:</h3><ul>";
-                data.result.forEach(variant => {
-                    output += `<li>ID: ${variant.id}, Giá: ${variant.price}, Tồn kho: ${variant.stock}</li>`;
-                });
-                output += "</ul>";
-                document.getElementById("variant-result").innerHTML = output;
-            } else {
-                document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
-            }
-        })
-        .catch(error => console.error("Lỗi khi gọi API:", error));
+            console.log("Calling API at:", url);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Kiểm tra xem data.result có tồn tại và không phải null
+                    if (data.result) {
+                        let output = "<h3>Kết quả tìm kiếm:</h3><ul>";
+                        // Nếu result là một đối tượng, không cần dùng forEach
+                        output += `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}</li>`;
+                        output += "</ul>";
+                        document.getElementById("variant-result").innerHTML = output;
+                    } else {
+                        document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
+                    }
+                })
+                .catch(error => console.error("Lỗi khi gọi API:", error));
+        } else {
+            document.getElementById("variant-result").innerHTML = "<p>Vui lòng chọn cả màu và kích thước.</p>";
+        }
+    }
+
+    function selectColor(element, colorValue) {
+        selectedColor = colorValue;
+        fetchProductAvailableVariant();
+    }
+
+    function selectSize(element, sizeValue) {
+        selectedSize = sizeValue;
+        fetchProductAvailableVariant();
     }
 </script>
 

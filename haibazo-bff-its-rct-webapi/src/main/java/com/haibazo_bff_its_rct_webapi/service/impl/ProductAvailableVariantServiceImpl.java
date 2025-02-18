@@ -152,18 +152,23 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
     }
 
     @Override
-    public APICustomize<List<ItsRctProductAvailableVariantResponse>> findByVariantValueAndProductId(String value, Long productId) {
-        List<ProductAvailableVariant> variants = productAvailableVariantRepository.findByProductVariantValueAndProductId(value, productId);
-        List<ItsRctProductAvailableVariantResponse> response = variants.stream()
-                .map(variant -> new ItsRctProductAvailableVariantResponse(
-                        variant.getId(),
-                        variant.getHighLightedImageUrl(),
-                        variant.getPrice(),
-                        variant.getStock(),
-                        variant.getProduct().getId(),
-                        null,
-                        null
-                )).toList();
+    public APICustomize<ItsRctProductAvailableVariantResponse> findByColorAndSizeAndProductId(String color, String size, Long productId) {
+        ProductAvailableVariant variant = productAvailableVariantRepository.findByColorAndSizeAndProductId(color, size, productId);
+
+        // Kiểm tra nếu không có kết quả
+        if (variant == null) {
+            return new APICustomize<>(ApiError.NOT_FOUND.getCode(), ApiError.NOT_FOUND.getMessage(), null);
+        }
+
+        ItsRctProductAvailableVariantResponse response = new ItsRctProductAvailableVariantResponse(
+                variant.getId(),
+                variant.getHighLightedImageUrl(),
+                variant.getPrice(),
+                variant.getStock(),
+                variant.getProduct().getId(),
+                null,
+                null
+        );
 
         return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), response);
     }
