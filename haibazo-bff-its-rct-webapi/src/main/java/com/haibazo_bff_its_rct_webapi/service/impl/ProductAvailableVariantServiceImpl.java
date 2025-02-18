@@ -152,9 +152,8 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
     }
 
     @Override
-    public APICustomize<List<ItsRctProductAvailableVariantResponse>> findByVariantValue(String value) {
-
-        List<ProductAvailableVariant> variants = productAvailableVariantRepository.findByProductVariantValue(value);
+    public APICustomize<List<ItsRctProductAvailableVariantResponse>> findByVariantValueAndProductId(String value, Long productId) {
+        List<ProductAvailableVariant> variants = productAvailableVariantRepository.findByProductVariantValueAndProductId(value, productId);
         List<ItsRctProductAvailableVariantResponse> response = variants.stream()
                 .map(variant -> new ItsRctProductAvailableVariantResponse(
                         variant.getId(),
@@ -167,6 +166,6 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
                 )).toList();
 
         return new APICustomize<>(ApiError.CREATED.getCode(), ApiError.CREATED.getMessage(), response);
-    };
+    }
     
 }

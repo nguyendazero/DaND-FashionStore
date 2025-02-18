@@ -11,7 +11,7 @@ public interface ProductAvailableVariantRepository extends JpaRepository<Product
 
     List<ProductAvailableVariant> findByProductId(Long productId);
 
-    @Query("SELECT pav FROM ProductAvailableVariant pav JOIN pav.productVariants pv WHERE pv.value = :value")
-    List<ProductAvailableVariant> findByProductVariantValue(@Param("value") String value);
+    @Query("SELECT pav FROM ProductAvailableVariant pav JOIN pav.productVariants pv WHERE pv.value = :value AND pav.product.id = :productId")
+    List<ProductAvailableVariant> findByProductVariantValueAndProductId(@Param("value") String value, @Param("productId") Long productId);
 
 }

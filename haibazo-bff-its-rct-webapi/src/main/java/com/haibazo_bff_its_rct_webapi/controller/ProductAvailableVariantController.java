@@ -32,10 +32,11 @@ public class ProductAvailableVariantController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
-    
-    @GetMapping("/public/product-available-variant/value/{value}")
-    public ResponseEntity<?> getProductAvailableVariants(@PathVariable String value) {
-        APICustomize<List<ItsRctProductAvailableVariantResponse>> response = productAvailableVariantService.findByVariantValue(value);
+
+    @GetMapping("/public/product-available-variant/value/{value}/product/{productId}")
+    public ResponseEntity<?> getProductAvailableVariants(@PathVariable String value, @PathVariable Long productId) {
+        System.out.println("Received request with value: " + value + " and productId: " + productId);
+        APICustomize<List<ItsRctProductAvailableVariantResponse>> response = productAvailableVariantService.findByVariantValueAndProductId(value, productId);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
