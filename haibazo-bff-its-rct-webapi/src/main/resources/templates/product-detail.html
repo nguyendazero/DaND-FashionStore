@@ -147,7 +147,7 @@
                         </span>
                     </div>
                 </div>
-                
+
             </div>
         </div>
 
@@ -156,15 +156,18 @@
 
         <div class="book-price">
             <div class="price">
-                <strong th:text="${product.discount != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : product.lowestPrice}"></strong>đ
+                <strong style="color: #ff6600;" th:text="${product.discount != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : product.lowestPrice}"></strong>đ
                 <strike th:text="${product.lowestPrice}"></strike>
                 <span th:text="${product.discount != null ? product.discount.discountValue : 0} + '%'"></span> off
+                <div class="stock-info"></div> <!-- Thêm phần tử này để hiển thị tồn kho -->
             </div>
             <div class="input-group">
                 <div class="offer-bottom">
                     <div>
                         <form th:if="${product.introduction != 'runout'}"
-                              th:action="@{/cart/addToCart/{id}(id=${product.id})}" method="post">
+                              method="post" onsubmit="return checkVariantId()">
+                            <input type="hidden" name="variantId" id="variantId" />
+
                             <button type="submit" class="cartbtn"
                                     style="background-color: #3b5d50; color: white; border: none; padding: 5px 10px; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; border-radius: 5px; transition: background-color 0.3s;">
                                 <i class="fa-solid fa-cart-shopping"></i> Add to cart
@@ -178,6 +181,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </section>
 
@@ -324,7 +328,8 @@
 
         <div class="question tabcontent" id="question" style="display: none;">
             <!-- Phần nhập câu hỏi -->
-            <div class="ask-question" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+            <div class="ask-question"
+                 style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
                 <h6 style="font-size: 18px; color: #333; font-weight: bold;">Ask a Question:</h6>
                 <form th:action="@{/question/add}" method="post">
                     <div style="margin-bottom: 10px;">
@@ -430,30 +435,48 @@
 <script>
     let selectedColor = null;
     let selectedSize = null;
-    productId = [[${product.id}]];
-
+    const productId = [[${product.id}]];
+    
     function fetchProductAvailableVariant() {
+        document.getElementById("variant-result").innerHTML = ""; // Xóa nội dung cũ
+    
         if (selectedColor && selectedSize) {
             const url = `/api/bff/its-rct/v1/ecommerce/public/product-available-variant/color/${selectedColor}/size/${selectedSize}/product/${productId}`;
-
+    
             console.log("Calling API at:", url);
-
+    
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.result) {
-                        let output = `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}, Image: ${data.result.highLightedImageUrl}</li>`;
-                        document.getElementById("variant-result").innerHTML = output;
+                        // Cập nhật ID variant vào trường ẩn
+                        document.getElementById('variantId').value = data.result.id;
+    
+                        // Cập nhật dữ liệu vào các thẻ HTML
+                        document.querySelector(".img img").src = data.result.highLightedImageUrl;
+    
+                        const priceElement = document.querySelector(".book-price .price strong");
+                        const discountElement = document.querySelector(".book-price .price span");
+                        const stockElement = document.querySelector(".stock-info");
+    
+                        // Cập nhật giá và discount
+                        priceElement.innerText = data.result.price;
+                        discountElement.innerText = data.result.discount ? `${data.result.discount.discountValue}%` : '0% off';
+    
+                        // Cập nhật tồn kho
+                        if (stockElement) {
+                            stockElement.innerText = `Quantity: ${data.result.stock}`;
+                        }
                     } else {
-                        document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
+                        document.getElementById("variant-result").innerHTML = "<p>No matching products found.</p>";
                     }
                 })
-                .catch(error => console.error("Lỗi khi gọi API:", error));
+                .catch(error => console.error("Error calling API:", error));
         } else {
-            document.getElementById("variant-result").innerHTML = "<p>Vui lòng chọn cả màu và kích thước.</p>";
+            document.getElementById("variant-result").innerHTML = "<p>Please select both color and size.</p>";
         }
     }
-
+    
     function selectColor(element, colorValue) {
         selectedColor = colorValue;
     
@@ -461,8 +484,8 @@
         const colorOptions = document.querySelectorAll('.color-options span');
         colorOptions.forEach(option => {
             option.style.border = '1px solid #ccc';
-            option.style.backgroundColor = ''; // Xóa màu nền
-            option.style.color = ''; // Khôi phục màu chữ
+            option.style.backgroundColor = '';
+            option.style.color = '';
         });
     
         // Thêm thuộc tính inline cho nút hiện tại
@@ -480,8 +503,8 @@
         const sizeOptions = document.querySelectorAll('.size-options span');
         sizeOptions.forEach(option => {
             option.style.border = '1px solid #ccc';
-            option.style.backgroundColor = ''; // Xóa màu nền
-            option.style.color = ''; // Khôi phục màu chữ
+            option.style.backgroundColor = '';
+            option.style.color = '';
         });
     
         // Thêm thuộc tính inline cho nút hiện tại
@@ -490,6 +513,19 @@
         element.style.color = '#007bff';
     
         fetchProductAvailableVariant();
+    }
+    
+    function checkVariantId() {
+        const variantId = document.getElementById('variantId').value;
+        
+        if (!variantId) {
+            alert('Please select a product variant before adding to cart.');
+            return false; // Ngăn không cho gửi form
+        }
+    
+        const form = document.querySelector('form');
+        form.action = `/api/bff/its-rct/v1/ecommerce/public/cart/addToCart/${variantId}`;
+        return true; // Cho phép gửi form
     }
 </script>
 

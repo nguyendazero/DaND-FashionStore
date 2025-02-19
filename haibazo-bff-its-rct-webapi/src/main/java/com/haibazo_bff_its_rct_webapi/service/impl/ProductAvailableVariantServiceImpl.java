@@ -155,11 +155,6 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
     public APICustomize<ItsRctProductAvailableVariantResponse> findByColorAndSizeAndProductId(String color, String size, Long productId) {
         ProductAvailableVariant variant = productAvailableVariantRepository.findByColorAndSizeAndProductId(color, size, productId);
 
-        // Kiểm tra nếu không có kết quả
-        if (variant == null) {
-            return new APICustomize<>(ApiError.NOT_FOUND.getCode(), ApiError.NOT_FOUND.getMessage(), null);
-        }
-
         ItsRctProductAvailableVariantResponse response = new ItsRctProductAvailableVariantResponse(
                 variant.getId(),
                 variant.getHighLightedImageUrl(),
