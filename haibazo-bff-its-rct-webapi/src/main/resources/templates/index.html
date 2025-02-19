@@ -59,7 +59,7 @@
                 <a class="product-item" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/{id}(id=${product.id})}">
                     <img th:src="@{${product.highLightedImageUrl}}" class="img-fluid product-thumbnail" style="height: 400px;">
                     <h3 class="product-title" th:text="${product.name}" style="display: inline-block; width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></h3>
-                    <strong class="product-price" th:text="${product.lowestPrice}" style="display: block; font-size: 1.2em; font-weight: bold; color: #ff6600;"></strong>
+                    <strong class="product-price" th:text="${product.lowestPrice.intValue()}" style="display: block; font-size: 1.2em; font-weight: bold; color: #ff6600;"></strong>
                     <span class="icon-cross">
                         <img src="/images/cross.svg" class="img-fluid">
                     </span>
@@ -157,9 +157,9 @@
                     <span class="star" style="color: gold;"><i class="fa fa-star"></i> <span th:text="${product.rating}"></span></span>
                     <div class="footer" style="font-size: 5px; color: #555;">
                         <div class="price">
-                            <span style="margin-right: 5px;" th:text="${product.lowestPrice != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : 0}"></span>
+                            <span style="margin-right: 5px;" th:text="${product.lowestPrice != null ? product.lowestPrice.intValue() * (1 - product.discount.discountValue / 100) : 0}"></span>
                             <span>
-                               <strike style="color: #999;" th:text="${product.lowestPrice}"></strike>
+                               <strike style="color: #999;" th:text="${product.lowestPrice.intValue()}"></strike>
                             </span>
                         </div>
                     </div>

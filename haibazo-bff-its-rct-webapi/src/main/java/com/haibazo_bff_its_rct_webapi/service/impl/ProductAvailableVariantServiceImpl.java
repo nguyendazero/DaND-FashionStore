@@ -161,7 +161,7 @@ public class ProductAvailableVariantServiceImpl implements ProductAvailableVaria
                 variant.getPrice(),
                 variant.getStock(),
                 variant.getProduct().getId(),
-                null,
+                variant.getDiscount() != null ? discountService.discount(variant.getDiscount().getId()).getResult() : null,
                 null
         );
 

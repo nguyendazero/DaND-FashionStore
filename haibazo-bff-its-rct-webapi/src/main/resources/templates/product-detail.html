@@ -156,10 +156,10 @@
 
         <div class="book-price">
             <div class="price">
-                <strong style="color: #ff6600;" th:text="${product.discount != null ? product.lowestPrice * (1 - product.discount.discountValue / 100) : product.lowestPrice}"></strong>đ
-                <strike th:text="${product.lowestPrice}"></strike>
-                <span th:text="${product.discount != null ? product.discount.discountValue : 0} + '%'"></span> off
-                <div class="stock-info"></div> <!-- Thêm phần tử này để hiển thị tồn kho -->
+                <strong style="color: #ff6600;" th:text="${product.discount != null ? (product.lowestPrice * (1 - product.discount.discountValue / 100)).intValue() : product.lowestPrice.intValue()}"></strong>đ
+                <strike th:text="${product.lowestPrice.intValue()}"></strike>
+                <span></span>
+                <div class="stock-info"></div>
             </div>
             <div class="input-group">
                 <div class="offer-bottom">
@@ -456,12 +456,24 @@
                         document.querySelector(".img img").src = data.result.highLightedImageUrl;
     
                         const priceElement = document.querySelector(".book-price .price strong");
+                        const strikePriceElement = document.querySelector(".book-price .price strike");
                         const discountElement = document.querySelector(".book-price .price span");
                         const stockElement = document.querySelector(".stock-info");
     
                         // Cập nhật giá và discount
-                        priceElement.innerText = data.result.price;
-                        discountElement.innerText = data.result.discount ? `${data.result.discount.discountValue}%` : '0% off';
+                        const lowestPrice = data.result.price; // Giá từ response
+                        const discount = data.result.discount;
+    
+                        if (discount) {
+                            const discountedPrice = lowestPrice * (1 - discount.discountValue / 100);
+                            priceElement.innerText = discountedPrice + 'đ';
+                            strikePriceElement.innerText = lowestPrice + 'đ'; // Hiển thị giá gốc
+                            discountElement.innerText = `${discount.discountValue}% off`;
+                        } else {
+                            priceElement.innerText = lowestPrice + 'đ';
+                            strikePriceElement.innerText = lowestPrice + 'đ'; // Hiển thị giá gốc
+                            discountElement.innerText = '0% off';
+                        }
     
                         // Cập nhật tồn kho
                         if (stockElement) {
@@ -476,7 +488,7 @@
             document.getElementById("variant-result").innerHTML = "<p>Please select both color and size.</p>";
         }
     }
-    
+            
     function selectColor(element, colorValue) {
         selectedColor = colorValue;
     

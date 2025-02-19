@@ -113,7 +113,7 @@
         <a class="product-item" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/{id}(id=${product.id})}">
           <img th:src="${product.highLightedImageUrl}" class="img-fluid product-thumbnail" style="height: 270px;">
           <h3 class="product-title" th:text="${#strings.length(product.name) > 30 ? #strings.substring(product.name, 0, 30) + '...' : product.name}"></h3>
-          <strong class="product-price" th:text="${product.lowestPrice}" style="color: #ff6600;"></strong>
+          <strong class="product-price" th:text="${product.lowestPrice.intValue()}" style="color: #ff6600;"></strong>
           <span class="icon-cross" th:href="@{/cart/addCart/{id}(id=${product.id})}">
             <img th:src="@{/images/cross.svg}" class="img-fluid">
           </span>
