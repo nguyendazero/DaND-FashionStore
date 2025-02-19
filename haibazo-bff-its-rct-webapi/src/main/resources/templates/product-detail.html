@@ -122,13 +122,13 @@
                         Size:
                     </h6>
                     <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
-        <span th:each="variant : ${#sets.toSet(variants)}"
-              th:if="${variant.variantKey == 'Size'}"
-              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
-              th:data-value="${variant.value}"
-              th:attr="onclick='selectSize(this, &quot;' + ${variant.value} + '&quot;)'">
-            <strong th:text="${variant.value}"></strong>
-        </span>
+                        <span th:each="variant : ${#sets.toSet(variants)}"
+                              th:if="${variant.variantKey == 'Size'}"
+                              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
+                              th:data-value="${variant.value}"
+                              th:attr="onclick='selectSize(this, &quot;' + ${variant.value} + '&quot;)'">
+                            <strong th:text="${variant.value}"></strong>
+                        </span>
                     </div>
                 </div>
 
@@ -138,13 +138,13 @@
                         Color:
                     </h6>
                     <div class="variant-options" style="display: flex; flex-wrap: wrap; gap: 10px;">
-        <span th:each="variant : ${#sets.toSet(variants)}"
-              th:if="${variant.variantKey == 'Color'}"
-              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
-              th:data-value="${variant.value}"
-              th:attr="onclick='selectColor(this, &quot;' + ${variant.value} + '&quot;)'">
-            <strong th:text="${variant.value}"></strong>
-        </span>
+                        <span th:each="variant : ${#sets.toSet(variants)}"
+                              th:if="${variant.variantKey == 'Color'}"
+                              style="border: 1px solid #ccc; padding: 5px; border-radius: 4px; cursor: pointer;"
+                              th:data-value="${variant.value}"
+                              th:attr="onclick='selectColor(this, &quot;' + ${variant.value} + '&quot;)'">
+                            <strong th:text="${variant.value}"></strong>
+                        </span>
                     </div>
                 </div>
                 
@@ -430,7 +430,7 @@
 <script>
     let selectedColor = null;
     let selectedSize = null;
-    const productId = window.location.pathname.split('/').pop();
+    productId = [[${product.id}]];
 
     function fetchProductAvailableVariant() {
         if (selectedColor && selectedSize) {
@@ -441,12 +441,8 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    // Kiểm tra xem data.result có tồn tại và không phải null
                     if (data.result) {
-                        let output = "<h3>Kết quả tìm kiếm:</h3><ul>";
-                        // Nếu result là một đối tượng, không cần dùng forEach
-                        output += `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}</li>`;
-                        output += "</ul>";
+                        let output = `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}</li>`;
                         document.getElementById("variant-result").innerHTML = output;
                     } else {
                         document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
@@ -460,11 +456,39 @@
 
     function selectColor(element, colorValue) {
         selectedColor = colorValue;
+    
+        // Xóa các thuộc tính inline khỏi tất cả các nút màu
+        const colorOptions = document.querySelectorAll('.color-options span');
+        colorOptions.forEach(option => {
+            option.style.border = '1px solid #ccc';
+            option.style.backgroundColor = ''; // Xóa màu nền
+            option.style.color = ''; // Khôi phục màu chữ
+        });
+    
+        // Thêm thuộc tính inline cho nút hiện tại
+        element.style.border = '2px solid #007bff';
+        element.style.backgroundColor = '#e7f0ff';
+        element.style.color = '#007bff';
+    
         fetchProductAvailableVariant();
     }
-
+    
     function selectSize(element, sizeValue) {
         selectedSize = sizeValue;
+    
+        // Xóa các thuộc tính inline khỏi tất cả các nút kích thước
+        const sizeOptions = document.querySelectorAll('.size-options span');
+        sizeOptions.forEach(option => {
+            option.style.border = '1px solid #ccc';
+            option.style.backgroundColor = ''; // Xóa màu nền
+            option.style.color = ''; // Khôi phục màu chữ
+        });
+    
+        // Thêm thuộc tính inline cho nút hiện tại
+        element.style.border = '2px solid #007bff';
+        element.style.backgroundColor = '#e7f0ff';
+        element.style.color = '#007bff';
+    
         fetchProductAvailableVariant();
     }
 </script>
