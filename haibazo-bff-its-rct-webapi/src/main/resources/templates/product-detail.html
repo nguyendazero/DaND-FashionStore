@@ -442,7 +442,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.result) {
-                        let output = `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}</li>`;
+                        let output = `<li>ID: ${data.result.id}, Giá: ${data.result.price}, Tồn kho: ${data.result.stock}, Image: ${data.result.highLightedImageUrl}</li>`;
                         document.getElementById("variant-result").innerHTML = output;
                     } else {
                         document.getElementById("variant-result").innerHTML = "<p>Không tìm thấy sản phẩm phù hợp.</p>";
