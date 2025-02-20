@@ -11,17 +11,22 @@ import com.manager_account.exceptions.GlobalExceptionHandler;
 import com.manager_account.security.AccessTokenResponse;
 import com.manager_account.security.JwtUtils;
 import com.manager_account.services.AccountService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-@RestController
+@Controller
 @RequestMapping("/api/bff/its-rct/v1/account")
 @RequiredArgsConstructor
 public class AccountController {
@@ -48,10 +53,42 @@ public class AccountController {
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 
+    @GetMapping("/public/login-page")
+    public String loginPage() {
+        return "login";
+    }
+    
     @PostMapping("/public/sign-in")
-    public ResponseEntity<?> signIn(@RequestBody SignInRequest request) {
-        APICustomize<SignInResponse> response = accountService.signIn(request);
-        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    public RedirectView signIn(@ModelAttribute SignInRequest request, HttpServletResponse response) {
+        APICustomize<SignInResponse> apiResponse = accountService.signIn(request);
+        String jwtToken = apiResponse.getResult().getJwtToken();
+
+        // Tạo cookie
+        Cookie cookie = new Cookie("jwtToken", jwtToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(60 * 60 * 24);
+
+        // Thêm cookie vào response
+        response.addCookie(cookie);
+        
+        String redirectUrl = "http://localhost:8386/api/bff/its-rct/v1/ecommerce/public/home";
+        return new RedirectView(redirectUrl);
+    }
+
+
+    @GetMapping("public/logout")
+    public RedirectView logout(HttpServletResponse response) {
+
+        Cookie cookie = new Cookie("jwtToken", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // Đặt thời gian sống bằng 0 để xóa cookie
+
+        // Thêm cookie vào response
+        response.addCookie(cookie);
+        
+        String redirectUrl = "http://localhost:8386/api/bff/its-rct/v1/ecommerce/public/home";
+        return new RedirectView(redirectUrl);
     }
 
     @PostMapping("/public/refresh-token")
