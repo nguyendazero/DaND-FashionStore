@@ -334,18 +334,18 @@
                 <form th:action="@{/question/add}" method="post">
                     <div style="margin-bottom: 10px;">
                         <!-- Kiểm tra điều kiện người dùng đã đăng nhập hay chưa -->
-                        <span th:if="${false}"> <!-- Tạm thời luôn hiển thị form cho userTemp -->
-                    <textarea name="content" rows="4" placeholder="Enter your question"
-                              style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"></textarea>
-                </span>
-                        <span th:if="${true}"> <!-- Tạm thời không hiển thị -->
-                    <input type="text" name="fullName" placeholder="Full Name"
-                           style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-right: 5%;"/>
-                    <input type="email" name="email" placeholder="Email"
-                           style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"/>
-                    <textarea name="content" rows="4" placeholder="Enter your question"
-                              style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></textarea>
-                </span>
+                        <span th:if="${jwtToken != null}"> 
+                            <textarea name="content" rows="4" placeholder="Enter your question"
+                                      style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"></textarea>
+                        </span>
+                        <span th:if="${jwtToken == null}">
+                            <input type="text" name="fullName" placeholder="Full Name"
+                                   style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-right: 5%;"/>
+                            <input type="email" name="email" placeholder="Email"
+                                   style="width: 48%; border-radius: 4px; border: 1px solid #ccc; padding: 10px;"/>
+                            <textarea name="content" rows="4" placeholder="Enter your question"
+                                      style="width: 100%; border-radius: 4px; border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></textarea>
+                        </span>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         Submit Question

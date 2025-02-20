@@ -60,7 +60,7 @@
         <!-- Comment Form -->
         <form action="#" th:action="@{/api/bff/its-rct/v1/ecommerce/public/post-comment(postId=${post.id})}"
               method="post" style="margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div th:if="${jwtToken != null}" style="display: flex; align-items: center; margin-bottom: 15px;">
                 <div class="comment-avatar" style="margin-right: 15px;">
                     <img src="/images/userTemp.png" alt="Avatar"
                          style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #007bff;">
@@ -72,12 +72,12 @@
                 </div>
 
             <!-- Kiểm tra trạng thái đăng nhập -->
-            <span th:if="${false}"> <!-- Luôn hiển thị form cho userTemp -->
-        <input type="text" name="fullName" placeholder="Your Name" required
-               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-        <input type="email" name="email" placeholder="Your Email" required
-               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
-    </span>
+            <span th:if="${jwtToken == null}"> <!-- Luôn hiển thị form cho userTemp -->
+                <input type="text" name="fullName" placeholder="Your Name" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                <input type="email" name="email" placeholder="Your Email" required
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+            </span>
 
             <div>
                 <button type="submit" class="btn btn-primary"

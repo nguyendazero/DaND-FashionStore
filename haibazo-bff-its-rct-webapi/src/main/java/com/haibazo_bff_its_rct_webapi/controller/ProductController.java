@@ -6,6 +6,8 @@ import com.haibazo_bff_its_rct_webapi.dto.response.*;
 import com.haibazo_bff_its_rct_webapi.enums.Collections;
 import com.haibazo_bff_its_rct_webapi.enums.EntityType;
 import com.haibazo_bff_its_rct_webapi.service.*;
+import com.haibazo_bff_its_rct_webapi.utils.CookieUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -59,7 +61,11 @@ public class ProductController {
     }
 
     @GetMapping("/public/product/{id}")
-    public String product(@PathVariable Long id, Model model){
+    public String product(@PathVariable Long id, Model model, HttpServletRequest request){
+
+        // Lấy cookie từ request
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
+        model.addAttribute("jwtToken", jwtToken);
         
         APICustomize<ItsRctProductResponse> productResponse = productService.getProductById(id);
         APICustomize<List<ItsRctProductVariantResponse>> productVariantResponse = productService.findVariantsByProductId(id);

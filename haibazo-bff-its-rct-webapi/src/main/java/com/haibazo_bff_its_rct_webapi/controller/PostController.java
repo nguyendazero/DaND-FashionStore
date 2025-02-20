@@ -8,6 +8,8 @@ import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctTagResponse;
 import com.haibazo_bff_its_rct_webapi.service.PostCommentService;
 import com.haibazo_bff_its_rct_webapi.service.PostService;
 import com.haibazo_bff_its_rct_webapi.service.PostTagService;
+import com.haibazo_bff_its_rct_webapi.utils.CookieUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -37,7 +39,10 @@ public class PostController {
     }
 
     @GetMapping("/public/post/{id}")
-    public String post(@PathVariable Long id, Model model) {
+    public String post(@PathVariable Long id, Model model, HttpServletRequest request) {
+        // Lấy cookie từ request
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
+        model.addAttribute("jwtToken", jwtToken);
         
         APICustomize<ItsRctPostResponse> response = postService.post(id);
         APICustomize<List<ItsRctPostCommentResponse>> postCommentsResponse = postCommentService.getByPostId(id);
