@@ -128,9 +128,9 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     public APICustomize<String> addToCart(Long variantId, String authorizationHeader) {
         // Lấy JWT từ header và xác thực người dùng
-
-        ItsRctUserResponse userResponse = (authorizationHeader != null)
-                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(authorizationHeader))
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
                 : null;
         
         // Lấy thông tin người dùng
