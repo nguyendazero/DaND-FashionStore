@@ -138,10 +138,12 @@
                             <label class="text-black h4">Coupon</label>
                             <p>Enter your coupon code if you have one.</p>
                         </div>
-                        <form action="/cart/apply-coupon" method="post">
+                        <form th:action="@{/api/bff/its-rct/v1/ecommerce/public/cart-item/apply-coupon}" method="post">
                             <div class="col-md-8 mb-3 mb-md-0">
-                                <input style="margin-bottom: 5px;" type="text" class="form-control py-3 col-md-4"
-                                       name="couponCode" placeholder="Enter coupon code" required/>
+                                <label>
+                                    <input style="margin-bottom: 5px;" type="text" class="form-control py-3 col-md-4"
+                                           name="code" placeholder="Enter coupon code" required/>
+                                </label>
                                 <button type="submit" class="btn btn-black col-md-6">Apply Coupon</button>
                             </div>
                         </form>
@@ -175,8 +177,9 @@
                                     <span class="text-black">Discounted Total</span>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <strong style="color: #ff6600;" name="discountedTotal" id="discountedTotal" th:text="${totalPrice.intValue()}">
-                                        0
+                                    <strong style="color: #ff6600;" name="discountedTotal" id="discountedTotal">
+                                        <span th:if="${discountAmount == null}" th:text="${totalPrice.intValue()}">0</span>
+                                        <span th:if="${discountAmount != null}" th:text="${totalPrice.subtract(discountAmount).intValue()}">0</span>
                                     </strong>
                                 </div>
                             </div>
