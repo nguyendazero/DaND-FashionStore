@@ -128,9 +128,9 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     public APICustomize<String> addToCart(Long variantId, String authorizationHeader) {
         // Lấy JWT từ header và xác thực người dùng
-        String token = tokenUtil.extractToken(authorizationHeader);
-        ItsRctUserResponse userResponse = (token != null)
-                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+
+        ItsRctUserResponse userResponse = (authorizationHeader != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(authorizationHeader))
                 : null;
         
         // Lấy thông tin người dùng
@@ -163,8 +163,40 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public APICustomize<String> removeFromCart(RemoveFromCartRequest request, String authorizationHeader) {
+    public APICustomize<String> removeFromCart(Long variantId, String authorizationHeader) {
         // Lấy JWT từ header và xác thực người dùng
+        String token = tokenUtil.extractToken(authorizationHeader);
+        ItsRctUserResponse userResponse = (token != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+                : null;
+
+        // Kiểm tra người dùng đã được xác thực
+        if (userResponse == null) {
+            throw new UnauthorizedException();
+        }
+
+        // Lấy thông tin người dùng
+        User user = userRepository.findById(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
+
+        // Lấy variant sản phẩm dựa trên ID từ request
+        ProductAvailableVariant productAvailableVariant = productAvailableVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("ProductAvailableVariant", "id", variantId.toString()));
+
+        // Tìm CartItem trong giỏ hàng của người dùng
+        CartItem cartItem = cartItemRepository.findByUserIdAndProductAvailableVariantId(user.getId(), productAvailableVariant.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("CartItem", "UserId and ProductAvailableVariantId",
+                        "Your cart does not have the product with ID: " + productAvailableVariant.getId() + "."));
+
+        // Xóa CartItem khỏi giỏ hàng
+        cartItemRepository.delete(cartItem);
+
+        // Trả về phản hồi thành công
+        return new APICustomize<>(ApiError.NO_CONTENT.getCode(), ApiError.NO_CONTENT.getMessage(), "Product removed from cart successfully");
+    }
+
+    @Override
+    public APICustomize<String> changeQuantity(Long variantId, String authorizationHeader, int change) {
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = (token != null)
                 ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
@@ -174,20 +206,21 @@ public class CartItemServiceImpl implements CartItemService {
             throw new UnauthorizedException();
         }
 
-        // Lấy thông tin người dùng
         User user = userRepository.findById(userResponse.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
 
-        // Lấy variant sản phẩm và kiểm tra trong giỏ hàng
-        ProductAvailableVariant productAvailableVariant = productAvailableVariantRepository.findById(request.getProductAvailableVariantId())
-                .orElseThrow(() -> new ResourceNotFoundException("ProductAvailableVariant", "id", request.getProductAvailableVariantId().toString()));
+        ProductAvailableVariant productAvailableVariant = productAvailableVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("ProductAvailableVariant", "id", variantId.toString()));
 
         CartItem cartItem = cartItemRepository.findByUserIdAndProductAvailableVariantId(user.getId(), productAvailableVariant.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("CartItem", "UserId and ProductAvailableVariantId",
                         "Your cart does not have the product with ID: " + productAvailableVariant.getId() + "."));
-        
-        cartItemRepository.delete(cartItem);
-        
-        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Product removed from cart successfully");
+
+        long newQuantity = cartItem.getQuantity() + change;
+
+        cartItem.setQuantity(newQuantity);
+        cartItemRepository.save(cartItem);
+
+        return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Quantity updated successfully");
     }
 }

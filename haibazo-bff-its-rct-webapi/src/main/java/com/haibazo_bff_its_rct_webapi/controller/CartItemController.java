@@ -54,11 +54,34 @@ public class CartItemController {
         return new RedirectView("http://localhost:8386/api/bff/its-rct/v1/ecommerce/public/home");
     }
 
-    @DeleteMapping("/user/cart-item")
-    public ResponseEntity<?> removeFromCart(@RequestBody RemoveFromCartRequest request, HttpServletRequest httpRequest){
-        // Lấy header Authorization từ yêu cầu
-        String authorizationHeader = httpRequest.getHeader("Authorization");
-        APICustomize<String> response = cartItemService.removeFromCart(request, authorizationHeader);
+    @GetMapping("/public/cart-item/{variantId}")
+    public RedirectView removeFromCart(@PathVariable Long variantId, HttpServletRequest httpRequest) {
+        // Lấy cookie từ request
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(httpRequest);
+        if (jwtToken == null) throw new UnauthorizedException();
+
+        // Gọi service để xóa sản phẩm khỏi giỏ hàng
+        APICustomize<String> response = cartItemService.removeFromCart(variantId, "Bearer " + jwtToken);
+
+        // Trả về phản hồi
+        return new RedirectView("http://localhost:8386/api/bff/its-rct/v1/ecommerce/public/home");
+    }
+
+    @PostMapping("/public/cart-item/plus/{variantId}")
+    public ResponseEntity<?> increaseQuantity(@PathVariable Long variantId, HttpServletRequest httpRequest) {
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(httpRequest);
+        if (jwtToken == null) throw new UnauthorizedException();
+
+        APICustomize<String> response = cartItemService.changeQuantity(variantId, "Bearer " + jwtToken, 1);
+        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    }
+
+    @PostMapping("/public/cart-item/minus/{variantId}")
+    public ResponseEntity<?> decreaseQuantity(@PathVariable Long variantId, HttpServletRequest httpRequest) {
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(httpRequest);
+        if (jwtToken == null) throw new UnauthorizedException();
+
+        APICustomize<String> response = cartItemService.changeQuantity(variantId, "Bearer " + jwtToken, -1);
         return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
     }
 

@@ -17,7 +17,5 @@ public interface CartItemService {
 
     public APICustomize<String> removeFromCart(Long variantId, String authorizationHeader);
 
-    public APICustomize<String> changeQuantity(Long variantId, String authorizationHeader, int change);
-
 
 }

@@ -100,7 +100,7 @@
                                          style="max-width: 120px;">
                                         <div class="input-group-prepend">
                                             <a class="btn btn-outline-black decrease" type="button"
-                                               th:href="@{/cart-item/minus/{id} (id=${item.productAvailableVariantResponse.id})}">&minus;</a>
+                                               th:href="@{/api/bff/its-rct/v1/ecommerce/public/cart-item/minus/{variantId} (variantId=${item.productAvailableVariantResponse.id})}">&minus;</a>
                                         </div>
                                         <input type="text" class="form-control text-center quantity-amount"
                                                th:value="${item.quantity}" placeholder=""
@@ -108,14 +108,14 @@
                                                aria-describedby="button-addon1">
                                         <div class="input-group-append">
                                             <a class="btn btn-outline-black increase" type="button"
-                                               th:href="@{/cart-item/plus/{id} (id=${item.productAvailableVariantResponse.id})}">&plus;</a>
+                                               th:href="@{/api/bff/its-rct/v1/ecommerce/public/cart-item/plus/{variantId} (variantId=${item.productAvailableVariantResponse.id})}">&plus;</a>
                                         </div>
                                     </div>
                                 </td>
 
                                 <td th:text="${item.productAvailableVariantResponse.price.intValue() * item.quantity}"></td>
                                 <td><a onclick="return confirm('Are you sure?')"
-                                       th:href="@{/cart-item/removeToCart/{id} (id=${item.productAvailableVariantResponse.id})}"
+                                       th:href="@{/api/bff/its-rct/v1/ecommerce/public/cart-item/{variantId}(variantId=${item.productAvailableVariantResponse.id})}"
                                        class="btn btn-black btn-sm">X</a></td>
                             </tr>
                             </tbody>
@@ -203,6 +203,62 @@
             <a class="btn btn-outline-black btn-sm btn-block" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}">Continue Shopping</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.increase').forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const variantId = this.href.split('/').pop(); // Lấy variantId từ href
+                    updateQuantity(variantId, 1);
+                });
+            });
+    
+            document.querySelectorAll('.decrease').forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const variantId = this.href.split('/').pop(); // Lấy variantId từ href
+                    updateQuantity(variantId, -1);
+                });
+            });
+        });
+    
+        function updateQuantity(variantId, change) {
+            fetch(change > 0 ? `/api/bff/its-rct/v1/ecommerce/public/cart-item/plus/${variantId}` :
+                              `/api/bff/its-rct/v1/ecommerce/public/cart-item/minus/${variantId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': document.cookie.includes('jwtToken') ? `Bearer ${getJwtToken()}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.statusCode === '200') {
+                    // Cập nhật UI
+                    const quantityInput = document.querySelector(`#quantity-input-${variantId}`);
+                    quantityInput.value = parseInt(quantityInput.value) + change;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    
+        function getJwtToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.split('=');
+                if (key.trim() === 'jwtToken') {
+                    return value;
+                }
+            }
+            return null;
+        }
+    </script>
+    
     <!-- Start Footer Section -->
     <div th:replace="partials/footer :: footerFragment"></div>
     <!-- End Footer Section -->
