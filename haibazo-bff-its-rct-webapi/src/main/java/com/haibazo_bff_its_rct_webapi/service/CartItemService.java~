@@ -3,6 +3,7 @@ package com.haibazo_bff_its_rct_webapi.service;
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.RemoveFromCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCartResponse;
+import org.springframework.http.HttpHeaders;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface CartItemService {
 
     public APICustomize<List<ItsRctCartResponse>> getCartItems(String authorizationHeader);
 
-    public APICustomize<String> addToCart(Long variantId, String authorizationHeader);
+    public APICustomize<String> addToCart(Long variantId, HttpHeaders headers);
 
     public APICustomize<String> removeFromCart(RemoveFromCartRequest request, String authorizationHeader);
 

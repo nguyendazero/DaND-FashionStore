@@ -27,10 +27,11 @@ public class PostController {
 
     private final PostService postService;
     private final PostCommentService postCommentService;
-    private final PostTagService postTagService;
 
     @GetMapping("/public/post/posts")
-    public String posts(Model model) {
+    public String posts(Model model, HttpServletRequest request) {
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
+        model.addAttribute("jwtToken", jwtToken);
         
         APICustomize<List<ItsRctPostResponse>> postResponse = postService.posts();
         model.addAttribute("posts", postResponse.getResult());

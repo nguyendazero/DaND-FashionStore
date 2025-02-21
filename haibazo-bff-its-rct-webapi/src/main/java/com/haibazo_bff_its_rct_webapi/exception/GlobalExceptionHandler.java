@@ -17,6 +17,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -47,6 +48,30 @@ public class GlobalExceptionHandler {
                 throw new IOException("File not found: messages_vn_VN.properties");
             }
         }
+    }
+
+    @ExceptionHandler(ListProductEmptyException.class)
+    public String handleListProductEmptyException(Model model) {
+        String errorKey = "LISTPRODUCTISEMPTY";
+        String errorMessage = messages.getProperty(errorKey).replace("{0}", host);
+
+        // Lấy danh sách danh mục và kiểu
+        APICustomize<List<ItsRctCategoryResponse>> categoryResponse = categoryService.categories();
+        APICustomize<List<ItsRctStyleResponse>> stylesResponse = styleService.styles();
+        model.addAttribute("categories", categoryResponse.getResult());
+        model.addAttribute("styles", stylesResponse.getResult());
+        model.addAttribute("errorMessage", errorMessage);
+
+        return "products";
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public RedirectView handleUnauthorizedException(Model model) {
+        String errorKey = "UNAUTHORIZED401E";
+        String errorMessage = messages.getProperty(errorKey).replace("{0}", host);
+        
+        model.addAttribute("errorMessage", errorMessage);
+        return new RedirectView("http://localhost:8386/api/bff/its-rct/v1/account/public/login-page");
     }
 
     @ExceptionHandler(ErrorReviewProductException.class)
@@ -95,30 +120,6 @@ public class GlobalExceptionHandler {
         errorResponse.setErrors(errors);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(HttpServletRequest request) {
-
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorResponse.setTimestamp(LocalDateTime.now().toString());
-        errorResponse.setPath(request.getRequestURI());
-
-        List<ErrorDetail> errors = new ArrayList<>();
-
-        String errorKey = "UNAUTHORIZED401E";
-        String errorMessage = messages.getProperty(errorKey);
-
-        ErrorDetail errorDetail = new ErrorDetail();
-        errorDetail.setErrorCode("401");
-        errorDetail.setErrorMessageId(errorKey);
-        errorDetail.setErrorMessage(errorMessage);
-
-        errors.add(errorDetail);
-        errorResponse.setErrors(errors);
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
     @ExceptionHandler(ErrorPermissionException.class)
@@ -341,21 +342,6 @@ public class GlobalExceptionHandler {
         errors.add(errorDetail);
         errorResponse.setErrors(errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-    }
-
-    @ExceptionHandler(ListProductEmptyException.class)
-    public String handleListProductEmptyException(Model model) {
-        String errorKey = "LISTPRODUCTISEMPTY";
-        String errorMessage = messages.getProperty(errorKey).replace("{0}", host);
-
-        // Lấy danh sách danh mục và kiểu
-        APICustomize<List<ItsRctCategoryResponse>> categoryResponse = categoryService.categories();
-        APICustomize<List<ItsRctStyleResponse>> stylesResponse = styleService.styles();
-        model.addAttribute("categories", categoryResponse.getResult());
-        model.addAttribute("styles", stylesResponse.getResult());
-        model.addAttribute("errorMessage", errorMessage);
-        
-        return "products";
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

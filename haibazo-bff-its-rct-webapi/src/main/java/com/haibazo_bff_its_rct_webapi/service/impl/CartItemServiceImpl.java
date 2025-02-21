@@ -99,24 +99,21 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public APICustomize<String> addToCart(AddToCartRequest request, String authorizationHeader) {
+    public APICustomize<String> addToCart(Long variantId, String authorizationHeader) {
         // Lấy JWT từ header và xác thực người dùng
         String token = tokenUtil.extractToken(authorizationHeader);
         ItsRctUserResponse userResponse = (token != null)
                 ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
                 : null;
-
-        if (userResponse == null) {
-            throw new UnauthorizedException();
-        }
-
+        
         // Lấy thông tin người dùng
+        assert userResponse != null;
         User user = userRepository.findById(userResponse.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
 
         // Lấy variant sản phẩm
-        ProductAvailableVariant productAvailableVariant = productAvailableVariantRepository.findById(request.getProductAvailableVariantId())
-                .orElseThrow(() -> new ResourceNotFoundException("ProductAvailableVariant", "id", request.getProductAvailableVariantId().toString()));
+        ProductAvailableVariant productAvailableVariant = productAvailableVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("ProductAvailableVariant", "id", variantId.toString()));
 
         // Kiểm tra và cập nhật hoặc thêm sản phẩm vào giỏ hàng
         Optional<CartItem> optionalCartItem = cartItemRepository.findByUserIdAndProductAvailableVariantId(user.getId(), productAvailableVariant.getId());
@@ -124,18 +121,16 @@ public class CartItemServiceImpl implements CartItemService {
         if (optionalCartItem.isPresent()) {
             // Cập nhật số lượng nếu đã có
             CartItem cartItem = optionalCartItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
+            cartItem.setQuantity(cartItem.getQuantity() + 1);
+            cartItemRepository.save(cartItem);
         } else {
             // Tạo mới CartItem nếu chưa có
             CartItem newCartItem = new CartItem();
             newCartItem.setUser(user);
             newCartItem.setProductAvailableVariant(productAvailableVariant);
-            newCartItem.setQuantity(request.getQuantity());
+            newCartItem.setQuantity(1);
             cartItemRepository.save(newCartItem);
         }
-
-        // Lưu cartItem nếu đã cập nhật
-        optionalCartItem.ifPresent(cartItemRepository::save);
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Product added to cart successfully");
     }

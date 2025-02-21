@@ -45,7 +45,11 @@ public class ProductController {
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortOrder,
             @RequestParam(defaultValue = "0") int pageIndex,
-            @RequestParam(defaultValue = "10") int pageSize, Model model) {
+            @RequestParam(defaultValue = "10") int pageSize, 
+            Model model, HttpServletRequest request) {
+
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
+        model.addAttribute("jwtToken", jwtToken);
 
         // Lấy danh sách danh mục và kiểu
         APICustomize<List<ItsRctCategoryResponse>> categoryResponse = categoryService.categories();
