@@ -1,7 +1,6 @@
 package com.haibazo_bff_its_rct_webapi.controller;
 
 import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
-import com.haibazo_bff_its_rct_webapi.dto.request.AddToCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.RemoveFromCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCartResponse;
 import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;

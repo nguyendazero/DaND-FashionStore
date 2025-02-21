@@ -53,9 +53,10 @@ public class CartItemServiceImpl implements CartItemService {
                     ItsRctProductAvailableVariantResponse productAvailableVariantResponse = new ItsRctProductAvailableVariantResponse();
                     productAvailableVariantResponse.setId(variant.getId());
                     productAvailableVariantResponse.setHighLightedImageUrl(variant.getHighLightedImageUrl());
-                    productAvailableVariantResponse.setPrice(variant.getPrice());
-                    productAvailableVariantResponse.setStock(variant.getStock());
-                    productAvailableVariantResponse.setProductId(variant.getProduct().getId());
+
+                    // Lấy giá gốc
+                    BigDecimal originalPrice = variant.getPrice();
+                    BigDecimal finalPrice = originalPrice;
 
                     // Chuyển đổi Discount
                     Discount discount = variant.getDiscount();
@@ -63,10 +64,17 @@ public class CartItemServiceImpl implements CartItemService {
                     if (discount != null) {
                         discountResponse = new ItsRctDiscountResponse();
                         discountResponse.setDiscountId(discount.getId());
-                        discountResponse.setDiscountValue(discount.getDiscountValue());
+                        
+                        BigDecimal discountPercentage = discount.getDiscountValue();
+                        BigDecimal discountAmount = originalPrice.multiply(discountPercentage.divide(new BigDecimal("100"))); // Tính số tiền giảm
+                        finalPrice = originalPrice.subtract(discountAmount); // Tính giá cuối
+                        discountResponse.setDiscountValue(discountPercentage); // Lưu phần trăm giảm
                         discountResponse.setDateEndSale(discount.getDateEndSale());
                     }
                     productAvailableVariantResponse.setDiscount(discountResponse);
+                    productAvailableVariantResponse.setPrice(finalPrice);
+                    productAvailableVariantResponse.setStock(variant.getStock());
+                    productAvailableVariantResponse.setProductId(variant.getProduct().getId());
 
                     // Chuyển đổi ProductVariants
                     List<ItsRctProductVariantResponse> productVariantResponses = variant.getProductVariants().stream()
@@ -100,9 +108,21 @@ public class CartItemServiceImpl implements CartItemService {
         return cartItems.stream()
                 .map(cartItem -> {
                     ProductAvailableVariant variant = cartItem.getProductAvailableVariant();
-                    return variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                    BigDecimal originalPrice = variant.getPrice();
+                    BigDecimal quantity = BigDecimal.valueOf(cartItem.getQuantity());
+                    BigDecimal finalPrice = originalPrice;
+
+                    // Xử lý discount nếu có
+                    Discount discount = variant.getDiscount();
+                    if (discount != null) {
+                        BigDecimal discountPercentage = discount.getDiscountValue(); // Phần trăm giảm giá
+                        BigDecimal discountAmount = originalPrice.multiply(discountPercentage.divide(new BigDecimal("100")));
+                        finalPrice = originalPrice.subtract(discountAmount); // Tính giá sau khi giảm
+                    }
+
+                    return finalPrice.multiply(quantity); // Tính tổng giá trị cho item này
                 })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add); // Cộng dồn tất cả giá trị
     }
 
     @Override
