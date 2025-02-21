@@ -5,21 +5,18 @@ import com.haibazo_bff_its_rct_webapi.dto.request.AddToCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.request.RemoveFromCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.*;
 import com.haibazo_bff_its_rct_webapi.enums.ApiError;
-import com.haibazo_bff_its_rct_webapi.exception.ResourceNotFoundException;
-import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
-import com.haibazo_bff_its_rct_webapi.model.CartItem;
-import com.haibazo_bff_its_rct_webapi.model.Discount;
-import com.haibazo_bff_its_rct_webapi.model.ProductAvailableVariant;
-import com.haibazo_bff_its_rct_webapi.model.User;
-import com.haibazo_bff_its_rct_webapi.repository.CartItemRepository;
-import com.haibazo_bff_its_rct_webapi.repository.ProductAvailableVariantRepository;
-import com.haibazo_bff_its_rct_webapi.repository.UserRepository;
+import com.haibazo_bff_its_rct_webapi.exception.*;
+import com.haibazo_bff_its_rct_webapi.model.*;
+import com.haibazo_bff_its_rct_webapi.repository.*;
 import com.haibazo_bff_its_rct_webapi.service.CartItemService;
 import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +24,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartItemServiceImpl implements CartItemService {
 
-    private final CartItemRepository cartItemRepository;
+    private final CouponRepository couponRepository;
+    private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
+    private final CartItemRepository cartItemRepository;
     private final ProductAvailableVariantRepository productAvailableVariantRepository;
     private final TokenUtil tokenUtil;
 
@@ -222,5 +221,56 @@ public class CartItemServiceImpl implements CartItemService {
         cartItemRepository.save(cartItem);
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), "Quantity updated successfully");
+    }
+
+    @Override
+    public BigDecimal applyCoupon(String code, ItsRctUserResponse userResponse, Model model) {
+        User user = userRepository.findById(userResponse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userResponse.getId().toString()));
+
+        // Tìm coupon theo mã
+        Coupon coupon = couponRepository.findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon", "code", code));
+
+        // Kiểm tra xem người dùng đã sử dụng coupon này chưa
+        UserCoupon userCoupon = userCouponRepository.findByUserAndCoupon(user, coupon)
+                .orElse(null);
+
+        if (userCoupon != null && userCoupon.isUsed()) {
+            throw new CouponAlreadyUsedException();
+        }
+
+        // Kiểm tra thời gian hiệu lực của coupon
+        if (LocalDateTime.now().isAfter(coupon.getEndDate())) {
+            throw new CouponExpiredException();
+        }
+
+        // Lấy danh sách hàng trong giỏ
+        List<CartItem> cartItems = cartItemRepository.findByUserId(userResponse.getId());
+        if (cartItems.isEmpty()) {
+            throw new CartEmptyException(userResponse.getId());
+        }
+
+        // Tính toán tổng giá trị đơn hàng
+        BigDecimal totalPrice = cartItems.stream()
+                .map(cartItem -> cartItem.getProductAvailableVariant().getPrice()
+                        .multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Kiểm tra giá trị tối thiểu cần chi tiêu
+        if (totalPrice.compareTo(coupon.getMinSpend()) < 0) {
+            throw new MinSpendCouponException(coupon.getMinSpend());
+        }
+
+        // Tính toán giá trị đơn hàng sau khi áp dụng coupon
+        BigDecimal discountAmount = totalPrice.multiply(coupon.getDiscount().divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
+        totalPrice = totalPrice.subtract(discountAmount);
+
+        // Cập nhật lại tổng giá trị cho mô hình
+        model.addAttribute("totalPrice", totalPrice);
+        model.addAttribute("items", cartItems);
+        model.addAttribute("discountAmount", discountAmount);
+
+        return totalPrice;
     }
 }
