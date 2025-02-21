@@ -19,6 +19,7 @@ import com.haibazo_bff_its_rct_webapi.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,25 +35,13 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     public APICustomize<List<ItsRctCartResponse>> getCartItems(String authorizationHeader) {
-        // Lấy JWT từ header
-        String token = tokenUtil.extractToken(authorizationHeader);
-        ItsRctUserResponse userResponse = (token != null)
-                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(token))
+        // Lấy JWT từ header và xác thực người dùng
+        ItsRctUserResponse userResponse = (authorizationHeader != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(authorizationHeader))
                 : null;
 
-        // Kiểm tra xem người dùng đã đăng nhập chưa
-        if (userResponse == null) {
-            throw new UnauthorizedException();
-        }
-
-        Long userId = userResponse.getId();
-
-        // Lấy thông tin người dùng từ ID
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId.toString()));
-
-        // Lấy danh sách CartItem của người dùng
-        List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
+        assert userResponse != null;
+        List<CartItem> cartItems = cartItemRepository.findByUserId(userResponse.getId());
 
         // Chuyển đổi CartItem thành ItsRctCartResponse
         List<ItsRctCartResponse> cartResponses = cartItems.stream()
@@ -91,11 +80,29 @@ public class CartItemServiceImpl implements CartItemService {
                     productAvailableVariantResponse.setProductVariants(productVariantResponses);
 
                     // Tạo đối tượng ItsRctCartResponse
-                    return new ItsRctCartResponse(userId, productAvailableVariantResponse, cartItem.getQuantity());
+                    return new ItsRctCartResponse(productAvailableVariantResponse, cartItem.getQuantity());
                 })
                 .toList();
 
         return new APICustomize<>(ApiError.OK.getCode(), ApiError.OK.getMessage(), cartResponses);
+    }
+
+    @Override
+    public BigDecimal calculateTotalPrice(String authorizationHeader) {
+        ItsRctUserResponse userResponse = (authorizationHeader != null)
+                ? tokenUtil.getUserByHaibazoAccountId(tokenUtil.getHaibazoAccountIdFromToken(authorizationHeader))
+                : null;
+
+        assert userResponse != null;
+        List<CartItem> cartItems = cartItemRepository.findByUserId(userResponse.getId());
+
+        // Tính tổng giá trị của giỏ hàng
+        return cartItems.stream()
+                .map(cartItem -> {
+                    ProductAvailableVariant variant = cartItem.getProductAvailableVariant();
+                    return variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override

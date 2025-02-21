@@ -8,14 +8,15 @@ import com.haibazo_bff_its_rct_webapi.exception.UnauthorizedException;
 import com.haibazo_bff_its_rct_webapi.service.CartItemService;
 import com.haibazo_bff_its_rct_webapi.utils.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -26,21 +27,28 @@ public class CartItemController {
 
     private final CartItemService cartItemService;
 
-    @GetMapping("/user/cart-item/cart-items")
-    public ResponseEntity<?> cartItems( HttpServletRequest httpRequest){
-        // Lấy header Authorization từ yêu cầu
-        String authorizationHeader = httpRequest.getHeader("Authorization");
-        APICustomize<List<ItsRctCartResponse>> response = cartItemService.getCartItems(authorizationHeader);
-        return ResponseEntity.status(Integer.parseInt(response.getStatusCode())).body(response);
+    @GetMapping("/public/cart-item/cart-items")
+    public String cartItems(Model model, HttpServletRequest request){
+        
+        String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
+        if (jwtToken == null) throw new UnauthorizedException();
+        model.addAttribute("jwtToken", jwtToken);
+        
+        APICustomize<List<ItsRctCartResponse>> response = cartItemService.getCartItems(jwtToken);
+        BigDecimal totalPrice = cartItemService.calculateTotalPrice(jwtToken);
+        model.addAttribute("totalPrice", totalPrice);
+        model.addAttribute("items", response.getResult());
+        return "cart";
     }
 
 
     @PostMapping("/public/cart-item/{variantId}")
-    public RedirectView addToCart(@PathVariable Long variantId, HttpServletRequest request) {
+    public RedirectView addToCart(Model model, @PathVariable Long variantId, HttpServletRequest request) {
         
         // Lấy cookie từ request
         String jwtToken = CookieUtil.getJwtTokenFromCookies(request);
         if (jwtToken == null) throw new UnauthorizedException();
+        model.addAttribute("jwtToken", jwtToken);
         
         cartItemService.addToCart(variantId, "Bearer " + jwtToken);
         

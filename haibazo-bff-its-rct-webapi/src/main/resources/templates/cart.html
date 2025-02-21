@@ -1,0 +1,217 @@
+<!-- /*
+* Bootstrap 5
+* Template Name: Furni
+* Template Author: Untree.co
+* Template URI: https://untree.co/
+* License: https://creativecommons.org/licenses/by/3.0/
+*/ -->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Untree.co">
+
+    <meta name="description" content=""/>
+    <meta name="keywords" content="bootstrap, bootstrap4"/>
+
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="/css/tiny-slider.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
+</head>
+
+<body>
+
+<!-- Start Header/Navigation -->
+<div th:replace="partials/header :: headerFragment"></div>
+<!-- End Header/Navigation -->
+
+<!-- Start Hero Section -->
+<div class="hero">
+    <div class="container">
+        <div class="row justify-content-between">
+            <div class="col-lg-5">
+                <div class="intro-excerpt">
+                    <h1>Cart</h1>
+                </div>
+            </div>
+            <div class="col-lg-7">
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Hero Section -->
+
+
+<div class="untree_co-section before-footer-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div th:if="${#lists.isEmpty(items)}">
+                <div class="row">
+                    <div class="col-1">
+                        <img th:src="@{/images/cart-empty.png}" style="height: 80px;">
+                    </div>
+                    <div class="col-4">
+                        <h1>Your cart is empty</h1>
+                    </div>
+                </div>
+            </div>
+            <div th:unless="${#lists.isEmpty(items)}">
+                <div th:if="${errorIfTrue}" class="alert alert-danger">
+                    <span th:text="${errorIfTrue}"></span>
+                </div>
+                <form class="col-md-12" method="post">
+                    <div class="site-blocks-table">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th class="product-thumbnail">Image</th>
+                                <th class="product-name">Variant</th>
+                                <th class="product-price">Price</th>
+                                <th class="product-quantity">Quantity</th>
+                                <th class="product-total">Total</th>
+                                <th class="product-remove">Remove</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${items}">
+                                <td class="product-thumbnail">
+                                    <img th:src="@{${item.productAvailableVariantResponse.highLightedImageUrl}}" alt="Image" class="img-fluid"
+                                         style="height: 170px;">
+                                </td>
+                                <td class="product-name">
+                                    <h2 class="h5 text-black">
+                                        <span th:each="variant : ${item.productAvailableVariantResponse.productVariants}"
+                                              th:text="${variant.value}"
+                                              style="background-color: #f0f0f0; border-radius: 5px; padding: 5px 10px; margin: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: background-color 0.3s;"
+                                              onmouseover="this.style.backgroundColor='#e0e0e0';"
+                                              onmouseout="this.style.backgroundColor='#f0f0f0';">
+                                            Variant Name
+                                        </span>
+                                    </h2>
+                                </td>
+                                <td th:text="${item.productAvailableVariantResponse.price.intValue()}"></td>
+                                <td>
+                                    <div class="input-group mb-3 d-flex align-items-center quantity-container"
+                                         style="max-width: 120px;">
+                                        <div class="input-group-prepend">
+                                            <a class="btn btn-outline-black decrease" type="button"
+                                               th:href="@{/cart-item/minus/{id} (id=${item.productAvailableVariantResponse.id})}">&minus;</a>
+                                        </div>
+                                        <input type="text" class="form-control text-center quantity-amount"
+                                               th:value="${item.quantity}" placeholder=""
+                                               aria-label="Example text with button addon"
+                                               aria-describedby="button-addon1">
+                                        <div class="input-group-append">
+                                            <a class="btn btn-outline-black increase" type="button"
+                                               th:href="@{/cart-item/plus/{id} (id=${item.productAvailableVariantResponse.id})}">&plus;</a>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td th:text="${item.productAvailableVariantResponse.price.intValue() * item.quantity}"></td>
+                                <td><a onclick="return confirm('Are you sure?')"
+                                       th:href="@{/cart-item/removeToCart/{id} (id=${item.productAvailableVariantResponse.id})}"
+                                       class="btn btn-black btn-sm">X</a></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div th:unless="${#lists.isEmpty(items)}">
+            <div class="row" style="margin-bottom: 120px;">
+                <div class="col-md-6">
+                    <div class="row mb-5">
+                        <div class="col-md-6">
+                            <a class="btn btn-outline-black btn-sm btn-block" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}">Continue
+                                Shopping</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="text-black h4">Coupon</label>
+                            <p>Enter your coupon code if you have one.</p>
+                        </div>
+                        <form action="/cart/apply-coupon" method="post">
+                            <div class="col-md-8 mb-3 mb-md-0">
+                                <input style="margin-bottom: 5px;" type="text" class="form-control py-3 col-md-4"
+                                       name="couponCode" placeholder="Enter coupon code" required/>
+                                <button type="submit" class="btn btn-black col-md-6">Apply Coupon</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6 pl-5">
+                    <div class="row justify-content-end">
+                        <div class="col-md-7">
+                            <div class="row">
+                                <div class="col-md-12 text-right border-bottom mb-5">
+                                    <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
+                                </div>
+                            </div>
+                            <div th:if="${errorMessage}" class="alert alert-danger">
+                                <span th:text="${errorMessage}"></span>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <span class="text-black">Total</span>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <strong class="text-black">
+                                        <span style="color: #ff6600;" name="total" id="total" th:text="${totalPrice.intValue()}">
+                                            0
+                                        </span>
+                                    </strong>
+                                </div>
+                            </div>
+                            <div class="row mb-5">
+                                <div class="col-md-6">
+                                    <span class="text-black">Discounted Total</span>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <strong style="color: #ff6600;" name="discountedTotal" id="discountedTotal" th:text="${totalPrice.intValue()}">
+                                        0
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div class="row">
+
+                                <form action="/cart/checkout" method="get">
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn btn-black btn-lg py-3 btn-block">Proceed To
+                                            Checkout
+                                        </button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(items)}">
+        <div class="container">
+            <a class="btn btn-outline-black btn-sm btn-block" th:href="@{/api/bff/its-rct/v1/ecommerce/public/product/products}">Continue Shopping</a>
+        </div>
+    </div>
+    <!-- Start Footer Section -->
+    <div th:replace="partials/footer :: footerFragment"></div>
+    <!-- End Footer Section -->
+
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/tiny-slider.js"></script>
+    <script src="/js/custom.js"></script>
+    
+</body>
+
+</html>

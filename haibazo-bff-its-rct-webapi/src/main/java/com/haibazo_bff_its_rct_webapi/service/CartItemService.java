@@ -4,9 +4,12 @@ import com.haibazo_bff_its_rct_webapi.dto.APICustomize;
 import com.haibazo_bff_its_rct_webapi.dto.request.RemoveFromCartRequest;
 import com.haibazo_bff_its_rct_webapi.dto.response.ItsRctCartResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CartItemService {
+
+    public BigDecimal calculateTotalPrice(String authorizationHeader);
 
     public APICustomize<List<ItsRctCartResponse>> getCartItems(String authorizationHeader);
 
